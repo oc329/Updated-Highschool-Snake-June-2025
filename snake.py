@@ -44,7 +44,6 @@ class Snake():
 		self.applied_direction = (0, 0)
 		self.acceptable_directions = ((1, 0) or (0, 1))
 
-
 	def __build_starting_snake(self):
 				"""
 				Sets the positions of the snake body based on the snake's head position and direction the snake is facing.
@@ -61,7 +60,7 @@ class Snake():
 				].insert(0, self.snake_head)
 				## Sets segment positions equal to a copy of starting segment positions so it doesn't modify starting
 				self.segment_grid_positions = self.starting_snake_segments_grid_positions.copy()
-				
+
 	@property
 	def direction(self):
 		return self.direction
