@@ -1,0 +1,3 @@
+(Use this file to describe/demonstrate the user experience. You may include links to other documents as needed.)
+
+A graphics window should display on the right handside of the repl, above the terminal output. You should see a "snake" that starts out moving to the right, and you should be able to change the directions with the arrow keys. Try to not collide with the walls and get a highscore, which mayy go to a leaderboard that I should have created! Good luck! 

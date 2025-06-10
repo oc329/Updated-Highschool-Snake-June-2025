@@ -1,0 +1,42 @@
+Use this repl to create and submit your final project.
+
+You may create as many files and folders as needed to keep your project/work organized.
+
+However, AT A MINIMUM, you MUST:
+
+1) Move any files that are NOT part of your project into the "Unused" folder.
+
+2) Populate the README.txt file with a short, user-centric description of your project (i.e. "30-second elevator speech") PLUS essential user instructions.
+
+3) Populate the userXP.txt file with a demonstration of what the user experience should be. This does NOT have to match what your project finally does: It is a DESIGN document intended to convey what you will ATTEMPT to create.
+
+4) Add a progammer-centric description of your project below. This description conveys a) what your project does/is AS A WHOLE and b) anything you consider critical or remarkable that you want a fellow programmer (e.g. Mr. Cacnio) to appreciate. (Explaining specific code segments should be done using comments in the .py files.) For example: Explaining any files the program uses; How/why classes interact; Your inspiration for the project; A particularly clever algorithm; etc.
+It is HIGHLY RECOMMENDED that you IMMEDIATELY and CONTINUOUSLY update About.txt. Treat it as a running diary/journal of your thoughts/ideas. Just before the Due Date, you can then edit About.txt to its final draft.
+
+
+So far by May 12th I have created a graphics window, a snake piece class and a runing loop 
+The snake piece class is a class that defines a snake piece, which I'm adding to a list of snake_pieces in main.py to comprise the snake. 
+
+A snake Piece has x and y coordinates,x and ymove directions, a list of available moves that have moves added to it by the snake piece in front of it, a color which I may change if I end up creating different skins that the player can choose from, and finally a preset move speed 
+
+Right now I'm working on moving each snake_piece at the coordinates of the move that the user inputs.
+
+Since every time I check if the coordinates of the moves are == to the coordinates of the snake piece, it never works. So I might use int() on the coordinates of the moves and the snake coordinates (when I check them against the move coorinates) to round them to see if it might work then
+
+Let's Go, converting them to int at the coordinate check worked! The second snake piece now moves after the snake head (the first snake piece)
+
+To figure out why I needed to convert to int I printed the x and y coors of the snake and the x and y of the move, to see if they ever got close. I realized that the move coors were so exact like 284.9999999999916 so I converted to int to round them
+
+Rubric Adherance for Easy Grading: 
+* Line numbers as of May 17, the line numbers might be different by a couple of lines 
+
+Loops: 
+- While loop = running (Defined Line 23 and Used line 65)
+- In main.py, there are for loops on lines 163 and 73
+- In snake_piece.py, there is a for loop on 91 
+
+Conditional Structures: 
+- There are a ton of if statements but some specific ones are lines 80 and 106 in main.py
+
+Necessary Variables: 
+- Example of numeric variable values is the RGB color value variables on lines 34-37

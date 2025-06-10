@@ -1,0 +1,1 @@
+Just a buggier copy of the classic snake game.  There's a snake and that constantly moves and it grows when you eat apples. Use the arrow keys to move the snake. Score increases by 1 for every apple eaten and you die when you run into yourself or a wall.
