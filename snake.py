@@ -61,6 +61,7 @@ class Snake():
 				].insert(0, self.snake_head)
 				## Sets segment positions equal to a copy of starting segment positions so it doesn't modify starting
 				self.segment_grid_positions = self.starting_snake_segments_grid_positions.copy()
+				
 	@property
 	def direction(self):
 		return self.direction
