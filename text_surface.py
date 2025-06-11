@@ -123,21 +123,21 @@ class BaseTextSurface(ABC):
 
 class MultiLineTextSurface(BaseTextSurface):
     """
-    Editable text surface that can have the text split into rows of a certain number of characters per row.
-    Only splits text that doesn't have words or spaces
+    Text surface that displays the text split into multiple lines based on the passed line character limit.
+    Only splits text that doesn't have split at words or spaces.
     """
-    def __init__(self, row_char_limit: int, text: str, pos: tuple[int], text_renderer: BaseTextRenderer,
-                 pos_is_centered_on_middle=False):
-        self.row_char_limit = row_char_limit
+    def __init__(self, line_char_limit: int, text: str, pos: tuple[int], text_renderer: BaseTextRenderer,
+                 pos_anchor = 'start'):
+        self.line_char_limit = line_char_limit
         self.texts = []
         self.rendered_texts = []
-        super().__init__(text, pos, text_renderer, pos_is_centered_on_middle)
+        super().__init__(text, pos, text_renderer, pos_anchor)
     
     def _get_text_chunks(self):
         """
         Chunks the text at intervals and returns it as a list
         """
-        return get_chunk_str_into_list_of_str_using_batched(self.text, self.row_char_limit)
+        return get_chunk_str_into_list_of_str_using_batched(self.text, self.line_char_limit)
 
     def get_width(self):
         return max((rendered_text.get_width() for rendered_text in self.rendered_texts), default=0)
@@ -186,8 +186,8 @@ class SingleLineTextSurface(BaseTextSurface):
         win.blit(self.rendered_text, self.display_pos)
 
 class HighlightableSingleLineTextSurface(SingleLineTextSurface):
-    def __init__(self, text, pos, default_text_renderer: BaseTextRenderer, highlight_text_renderer: BaseTextRenderer, pos_is_centered_on_middle=False):
-        super().__init__(text, pos, default_text_renderer, pos_is_centered_on_middle)
+    def __init__(self, text, pos, default_text_renderer: BaseTextRenderer, highlight_text_renderer: BaseTextRenderer, pos_anchor = 'start'):
+        super().__init__(text, pos, default_text_renderer, pos_anchor)
         self.default_rendered_text = self.rendered_text
         self.highlighted_rendered_text = highlight_text_renderer.render(text)
 
@@ -252,12 +252,13 @@ class EditableSingleLineTextSurface(SingleLineTextSurface, EditableTextSurfaceMi
 class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixin):
     """
     Combines Editing Functionality from Mixin with Multi Line Text Surface Class
-    Surface Class that stores text and blits it to the screen. Text and position can change with methods.
+    Surface Class that stores text and blits it to the screen in multiple lines based on a line character limit.
+    Text and dispalay position can change with methods.
     """
     def remove_last_line(self): 
         self.texts.pop()
         self.rendered_texts.pop()
-        self._u()
+        self._calculate_display_pos_based_on_anchor()
 
     def _rerender_last_line(self):
         """
@@ -290,7 +291,7 @@ class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixi
             raise ValueError("char should be exactly one character long")
         
         ## Start a new line if there are no lines yet or if the last line is full
-        if len(self.texts) == 0 or len(self.texts[-1]) >= self.row_char_limit:
+        if len(self.texts) == 0 or len(self.texts[-1]) >= self.line_char_limit:
             self._add_new_line_and_char(char)
         else:
             ## Append character to current line and rerender it

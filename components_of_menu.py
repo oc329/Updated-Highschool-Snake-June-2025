@@ -125,7 +125,7 @@ class MainMenuPage(Page):
 	def __init__(self, game_title: str, menu: Menu, top_left_item_start_pos, bottom_left_item_start_pos, outer_page = None, child_pages: dict[str: Page] = None):
 		super().__init__(menu, top_left_item_start_pos, bottom_left_item_start_pos, outer_page, child_pages)
 		self.GAME_TITLE = game_title
-		self.title_text_surface: SingleLineTextSurface = SingleLineTextSurface(self, game_title, CENTER_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_is_centered_on_middle = True)
+		self.title_text_surface: SingleLineTextSurface = SingleLineTextSurface(self, game_title, CENTER_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_anchor = 'middle')
 
 	### Settings Page Boxes
 	def create_boxes(self):
@@ -171,7 +171,7 @@ class ScreenSettingsPage(Page):
 
 class BaseMenuBox(HighlightableSingleLineTextSurface):
 	def __init__(self, page: Page, display_pos: tuple[int][int], text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer):
-		super().__init__(text, display_pos, default_text_renderer, highlighted_text_renderer, pos_is_centered_on_middle = True)
+		super().__init__(text, display_pos, default_text_renderer, highlighted_text_renderer, pos_anchor = 'middle')
 		self.page = page
 
 	@abstractmethod

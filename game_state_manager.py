@@ -26,12 +26,11 @@ class GameStateManager:
         self.game_apple = Apple()
 
         game_score_msg = "Score 0"
-        starting_game_score_width = GAME_SCORE_TEXT_SETINGS.render("game_score_msg").get_width()
-        game_score_pos = SCREEN_WIDTH - starting_game_score_width
-        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_SETINGS)
+        game_score_pos = SCREEN_WIDTH
+        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_SETINGS, 'end')
         
         GAME_OVER_MSG = "GAME OVER"
-        self.game_over_text_surface = SingleLineTextSurface(GAME_OVER_MSG, CENTER_OF_SCREEN, GAME_OVER_MSG_TEXT_RENDERER, True)
+        self.game_over_text_surface = SingleLineTextSurface(GAME_OVER_MSG, CENTER_OF_SCREEN, GAME_OVER_MSG_TEXT_RENDERER, 'middle')
 
     def main_menu_loop(self): 
         menu = MainMenu(WINDOW, self.game_snake) #Takes in pygame window, game_snake and title screen message
@@ -75,8 +74,7 @@ class GameStateManager:
                     updated_score_msg = (
                     "Score " + str(len(self.game_snake.total_length) - self.game_snake.starting_length)
                     ) 
-                    score_text_pos = (SCREEN_WIDTH - score_text.get_width(), 0)
-                    self.game_score_text_surface.change_text_and_pos(updated_score_msg, score_text_pos, pos_is_middle = True)
+                    self.game_score_text_surface.change_text(updated_score_msg)
                      
                 self.game_snake.display(WINDOW)
                 self.game_score_text_surface.display(WINDOW)
