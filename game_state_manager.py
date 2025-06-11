@@ -9,7 +9,8 @@ from main_menu import MainMenu
 from screen_info import CENTER_OF_SCREEN, SCREEN_WIDTH, SCREEN_HEIGHT, GAME_SNAKE_STARTING_GRID_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, WINDOW
 from fps_controller import FPSController
 from snake import Snake
-from text_settings import GAME_OVER_MSG_TEXT_SETTINGS, GAME_SCORE_TEXT_SETTINGS
+from text_settings import GAME_OVER_MSG_TEXT_RENDERER, GAME_OVER_MSG_TEXT_SETTINGS, GAME_SCORE_TEXT_RENDERER, GAME_SCORE_TEXT_SETINGS
+from text_surface import EditableSingleLineTextSurface, SingleLineTextSurface
 
 class GameStateManager: 
     """
@@ -24,11 +25,13 @@ class GameStateManager:
         self.game_snake = Snake(WINDOW, GAME_SNAKE_STARTING_GRID_POS, "game")
         self.game_apple = Apple()
 
-        self.GAME_OVER_MSG = "GAME OVER"
-        self.GAME_OVER_MSG_FONT_OBJ = GAME_OVER_MSG_TEXT_SETTINGS.get_rendered_text(self.GAME_OVER_MSG)
-        self.GAME_OVER_MSG_POS = (CENTER_OF_SCREEN[0] - self.GAME_OVER_MSG_FONT_OBJ.get_width(), 
-                                  CENTER_OF_SCREEN[1] - self.GAME_OVER_MSG_FONT_OBJ.get_height)
-
+        game_score_msg = "Score 0"
+        starting_game_score_width = GAME_SCORE_TEXT_SETINGS.render("game_score_msg").get_width()
+        game_score_pos = SCREEN_WIDTH - starting_game_score_width
+        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_SETINGS)
+        
+        GAME_OVER_MSG = "GAME OVER"
+        self.game_over_text_surface = SingleLineTextSurface(GAME_OVER_MSG, CENTER_OF_SCREEN, GAME_OVER_MSG_TEXT_RENDERER, True)
 
     def main_menu_loop(self): 
         menu = MainMenu(WINDOW, self.game_snake) #Takes in pygame window, game_snake and title screen message
@@ -56,32 +59,27 @@ class GameStateManager:
         while self.game_snake.is_alive:
             if self.FPS_controller.should_update_graphics_and_movement():
                 WINDOW.fill(GAME_LOOP_BG_COLOR)
+
                 ### Scanning Events for Key Inputs
                 self.game_loop_event_handler.record_input()
                 snake_direction_tuple = self.game_loop_event_handler.direction_key_pressed().value
                 if snake_direction_tuple is not None:
                     self.game_snake.change_dir(snake_direction_tuple)
-
-                #https://www.pygame.org/docs/ref/rect.html#pygame.Rect.colliderect
-                ## Checks if snake collides with apple 
+                    
+                self.game_snake.__move_snake_forward_by_one() #Moves adds 1 column or row to the grid pos depending on the pieces' current directions 
+                self.game_snake.check_for_fatal_collisions()
+                
                 if self.game_snake.is_colliding_with_given_apple(self.game_apple):
                     self.game_apple.relocate()
                     self.snake.add_piece()
-
-                self.game_snake.move() #Moves adds 1 column or row to the grid pos depending on the pieces' current directions 
-
-                self.game_snake.check_for_fatal_collisions()
-
-
-                ### Displaying Score to Screen (In format Score + num)
-                score_msg = (
-                    "Score " + str(len(self.game_snake.snake.pieces) - self.game_snake.initial_num_of_pieces)
-                )  # Concatenated with + and not , b/c a "," produces the error TypeError: text must be a unicode or bytes
-                score_text = GAME_SCORE_TEXT_SETTINGS.get_rendered_text(score_msg)
-                score_text_pos = (SCREEN_WIDTH - score_text.get_width(), 0)
-
-                WINDOW.blit(score_text, score_text_pos)  # Makes the text appear on screen in top right corner
+                    updated_score_msg = (
+                    "Score " + str(len(self.game_snake.total_length) - self.game_snake.starting_length)
+                    ) 
+                    score_text_pos = (SCREEN_WIDTH - score_text.get_width(), 0)
+                    self.game_score_text_surface.change_text_and_pos(updated_score_msg, score_text_pos, pos_is_middle = True)
+                     
                 self.game_snake.display(WINDOW)
+                self.game_score_text_surface.display(WINDOW)
                 self.game.display(WINDOW)
 
                 pygame.display.flip()

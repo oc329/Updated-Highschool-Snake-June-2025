@@ -4,7 +4,7 @@ pygame.init()
 import os
 import random #To relocate the apple
 
-from screen_info import BLOCK_SIZE, grid_pos_to_display_pos_lookup, TOTAL_COLUMNS, TOTAL_ROWS
+from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMNS, TOTAL_ROWS
 # from object import Object
 
 
@@ -12,41 +12,42 @@ from screen_info import BLOCK_SIZE, grid_pos_to_display_pos_lookup, TOTAL_COLUMN
 
 
 class Apple(): 
-	def __init__(self):
-		random_column, random_row = self.__get_random_grid_pos()
-		self.grid_pos = (random_column, random_row)
-		## Sets apple's grid position to a random row and and column in the game grid
+    def __init__(self):
+        random_column, random_row = self.__get_random_grid_pos()
+        self.grid_pos = (random_column, random_row)
+        self.dipslay_pos = convert_grid_pos_to_display_pos(self.grid_pos)
+        ## Sets apple's grid position to a random row and and column in the game grid
 
-		self.width = int(BLOCK_SIZE[0]) #Sets apple's size equal to size of one block in game grid
-		self.height = int(BLOCK_SIZE[1]) 
+        self.width = int(CELL_SIZE[0]) #Sets apple's size equal to size of one block in game grid
+        self.height = int(CELL_SIZE[1]) 
+        
+        unscaled_image = pygame.image.load('apple_test2.png') # Relative file path that loads properly because os code correct cwd
+        self.loaded_img = pygame.transform.scale(unscaled_image, (self.width, self.height)) ## scales the image to the size of a cell in the grid
+    
+    @property
+    def grid_pos(self):
+        return self.grid_pos
+    
+    @grid_pos.setter
+    def grid_pos(self, new_grid_pos: tuple[int, int]): 
+        self.grid_pos = new_grid_pos
+        self.dipslay_pos = convert_grid_pos_to_display_pos(self.dipslay_pos)
 
+    def __get_random_grid_pos(self):
+        """
+        Returns a tuple of a random grid position
 
-		### Dimensions
-		# super().__init__(parent_screen, x_coor, y_coor, width, height)
-		#Since I use the attributes x, y, width and height in both the apple and snake piece classes, I made an object class that they both inherit
-		
-		
-		#self.loaded_img = pygame.image.load('apple_img.jpg')
-		self.loaded_img = pygame.image.load('apple_test2.png') # Relative file path that loads properly because os code correct cwd
+        Returns: tuple[int, int]; (random column, random row)
+        """
+        return (random.randint(0, TOTAL_COLUMNS - 1), random.randint(0, TOTAL_ROWS - 1)) # Minus 1 since randint upper is inclusive
+    
+    def relocate(self):
+        ## Getting Random Column and Row number
+        #Places the apple at a random set of coors within the screen dimensions
 
-		self.loaded_img = pygame.transform.scale(self.loaded_img, (self.width, self.height)) #scales the image to a 16 by 16 square
-	
-	def __get_random_grid_pos(self):
-		"""
-		Returns a tuple of a random grid position
+        self.grid_pos = self.__get_random_grid_pos()
 
-		Returns: tuple[int, int]; (random column, random row)
-		"""
-		return (random.randint(0, TOTAL_COLUMNS - 1), random.randint(0, TOTAL_ROWS - 1)) # Minus 1 since randint upper is inclusive
-	def relocate(self):
-		## Getting Random Column and Row number
-		#Places the apple at a random set of coors within the screen dimensions
+    def display(self, win: pygame.surface.Surface):
+        win.blit(self.loaded_img, self.dipslay_pos)
 
-		self.grid_pos = self.__get_random_grid_pos()
-		x_coor, y_coor = grid_pos_to_display_pos_lookup(self.grid_pos)
-		
-	def display(self, win: pygame.surface.Surface):
-		win.blit(self.loaded_img, self.rect)
-
-
-		
+        

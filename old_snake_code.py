@@ -4,7 +4,7 @@
 
 # from apple import Apple
 # from enums import Direction 
-# from screen_info import BLOCK_SIZE, GRID_TO_DISPLAY_POS, TOTAL_COLUMNS, TOTAL_ROWS
+# from screen_info import CELL_SIZE, GRID_TO_DISPLAY_POS, TOTAL_COLUMNS, TOTAL_ROWS
 
 
 # pygame.init()
@@ -247,7 +247,7 @@
 
 # # from apple import Apple
 # # from enums import Direction 
-# # from screen_info import BLOCK_SIZE, GRID_TO_DISPLAY_POS, TOTAL_COLUMNS, TOTAL_ROWS
+# # from screen_info import CELL_SIZE, GRID_TO_DISPLAY_POS, TOTAL_COLUMNS, TOTAL_ROWS
 
 
 
