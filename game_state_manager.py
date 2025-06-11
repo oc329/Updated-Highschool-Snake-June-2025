@@ -58,9 +58,9 @@ class GameStateManager:
                 WINDOW.fill(GAME_LOOP_BG_COLOR)
                 ### Scanning Events for Key Inputs
                 self.game_loop_event_handler.record_input()
-                arrow_key_pressed = self.game_loop_event_handler.direction_key_pressed
-                if arrow_key_pressed:
-                    self.game_snake.change_dir()
+                snake_direction_tuple = self.game_loop_event_handler.direction_key_pressed().value
+                if snake_direction_tuple is not None:
+                    self.game_snake.change_dir(snake_direction_tuple)
 
                 #https://www.pygame.org/docs/ref/rect.html#pygame.Rect.colliderect
                 ## Checks if snake collides with apple 

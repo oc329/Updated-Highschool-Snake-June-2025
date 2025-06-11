@@ -74,9 +74,10 @@ class GameLoopEventHandler(AbstractEventHandler):
         super().__init__(keys_to_track)
     
     
-    def direction_key_pressed(self) -> str | None:
+    def direction_key_pressed(self) -> Direction | None:
         """
-        Returns the direction of the currently pressed arrow key.
+        Returns the Direction of the currently pressed arrow key.
+        The direction is the Driectio  enum 
         If no arrow key is pressed, returns None.
         """
 

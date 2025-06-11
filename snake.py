@@ -42,24 +42,24 @@ class Snake():
 		## Applied direction starts as (0, 0) because the player hasn't applied any direction yet with arrow key input
 		self.direction = self.starting_head_pos
 		self.applied_direction = (0, 0)
-		self.acceptable_directions = ((1, 0) or (0, 1))
+		self.acceptable_directions = ((1, 0), (0, 1))
 
 	def __build_starting_snake(self):
-				"""
-				Sets the positions of the snake body based on the snake's head position and direction the snake is facing.
-				Saves these positions after the first time
-				""" 
-				self.snake_head.grid_pos = self.starting_head_grid_pos
-				head_x, head_y = self.starting_head_pos
-				x_dir, y_dir = self.starting_head_pos
+		"""
+		Sets the positions of the snake body based on the snake's head position and direction the snake is facing.
+		Saves these positions after the first time
+		""" 
+		self.snake_head.grid_pos = self.starting_head_grid_pos
+		head_x, head_y = self.starting_head_pos
+		x_dir, y_dir = self.direction
 
-				## Calculating snake body and inserting head at front
-				self.starting_snake_segments_grid_positions  = [
-						(head_x - piece_i * x_dir, head_y - piece_i * y_dir)
-						for piece_i in range(1, self.starting_length)
-				].insert(0, self.snake_head)
-				## Sets segment positions equal to a copy of starting segment positions so it doesn't modify starting
-				self.segment_grid_positions = self.starting_snake_segments_grid_positions.copy()
+		## Calculating snake body and inserting head at front
+		self.starting_snake_segments_grid_positions  = [
+				(head_x - piece_i * x_dir, head_y - piece_i * y_dir)
+				for piece_i in range(1, self.starting_length)
+		].insert(0, self.snake_head)
+		## Sets segment positions equal to a copy of starting segment positions so it doesn't modify starting
+		self.segment_grid_positions = self.starting_snake_segments_grid_positions.copy()
 
 	@property
 	def direction(self):
@@ -67,27 +67,23 @@ class Snake():
 	
 	@direction.setter
 	def direction(self, new_direction: tuple[int, int]):
+		"""
+		Direction should represent the column and row change. 
+		It should be(1, 0) or (0, 1)
+		"""
 		if not isinstance(new_direction, tuple): 
 			return ValueError("Should be tuple")
 		if new_direction not in self.acceptable_directions:
 			raise ValueError(f"Direction should be one of these: {self.acceptable_directions}")
-		
-	# def ensure_passed_direction_is_within_bounds(self, new_direction: tuple[int, int]):
-	# 	"""
-	# 	Direction should represent the column and row change. 
-	# 	It should be(1, 0) or (0, 1)
- 	# 	"""
-	# 	if new_direction not in self.acceptable_directions:
-	# 		raise ValueError(f"Direction should be one of these: {self.acceptable_directions}")
-		
+				
 	def is_colliding_with_wall(self):
 		"""
 		Returns True if snake goes out of grid bounds, otherwise False 
 		"""
 
-		snake_head_row, snake_head_column = self.segment_grid_positions[0]
+		snake_head_column, snake_head_row = self.segment_grid_positions[0]
 
-		return not(0 <= snake_head_row < TOTAL_ROWS and 0 <= snake_head_column < TOTAL_COLUMNS)
+		return not(0 <= snake_head_column < TOTAL_ROWS and 0 <= snake_head_row < TOTAL_COLUMNS)
 	
 	def is_collidng_with_itself(self):
 		"""
@@ -163,7 +159,15 @@ class Snake():
 			column_diff_to_old_head = old_head_column - seg_column
 			row_diff_to_old_head = old_head_row - seg_row
 			self.segment_grid_positions[seg_i] = (new_head_column - column_diff_to_old_head, new_head_row - row_diff_to_old_head)
+	
+	# def change_direction_based_on_direction_enum(self, direction_enum: Direction):
+	# 	"""
+	# 	Changes the direction based on the given direction enum ("up", "down", "left", "right")
+	# 	"""
+	# 	new_dire
 
+	def change_direction(self, new_direction: tuple[int, int]):
+		self.direction == new_direction
 	def move_to_new_pos_and_change_direction(self, new_grid_position: tuple[int, int], new_direction: tuple[int, int]):
 		"""
 		Moves the snake to the new grid position and changes the direction its going in.
@@ -187,9 +191,6 @@ class Snake():
 		"""
 		for piece in self.pieces: 
 			piece.display(win) #Draws the rectangle each frame for snake piece onto screen  
-
-
-
 
 class MenuSnake(Snake):
 
