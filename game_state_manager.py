@@ -5,11 +5,11 @@ import time
 from apple import Apple
 from colors import GAME_LOOP_BG_COLOR, MAIN_MENU_BG_COLOR
 from event_handler import GameLoopEventHandler, MainMenuEventHamdler
-from main_menu import MainMenu
-from screen_info import CENTER_OF_SCREEN, SCREEN_WIDTH, SCREEN_HEIGHT, GAME_SNAKE_STARTING_GRID_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, WINDOW
+from main_menu import Menu
+from screen_info import CENTER_OF_SCREEN, SCREEN_WIDTH, GAME_SNAKE_STARTING_GRID_POS, WINDOW
 from fps_controller import FPSController
 from snake import Snake
-from text_settings import GAME_OVER_MSG_TEXT_RENDERER, GAME_OVER_MSG_TEXT_SETTINGS, GAME_SCORE_TEXT_RENDERER, GAME_SCORE_TEXT_SETINGS
+from text_settings import GAME_OVER_MSG_TEXT_RENDERER, GAME_SCORE_TEXT_RENDERER
 from text_surface import EditableSingleLineTextSurface, SingleLineTextSurface
 
 class GameStateManager: 
@@ -19,42 +19,54 @@ class GameStateManager:
     def __init__(self): 
         self.main_menu_event_handler = MainMenuEventHamdler()
         self.game_loop_event_handler = GameLoopEventHandler()
-        self.clock = pygame.time.Clock()
-        FPS = 25
+        self.FPS = 60
         self.FPS_controller = FPSController(self.FPS)
-        self.game_snake = Snake(WINDOW, GAME_SNAKE_STARTING_GRID_POS, "game")
+        
+        self.game_snake = Snake(GAME_SNAKE_STARTING_GRID_POS)
         self.game_apple = Apple()
 
         game_score_msg = "Score 0"
-        game_score_pos = SCREEN_WIDTH
-        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_SETINGS, 'end')
+        game_score_pos = (SCREEN_WIDTH, 0)
+        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_RENDERER, 'end')
         
         GAME_OVER_MSG = "GAME OVER"
         self.game_over_text_surface = SingleLineTextSurface(GAME_OVER_MSG, CENTER_OF_SCREEN, GAME_OVER_MSG_TEXT_RENDERER, 'middle')
+        self.menu = Menu(self.game_snake) #Takes in pygame window, game_snake and title screen message
+
+    def run(self):
+        """
+        Runs the game by running all the loops
+        """
+        self.main_menu_loop()
 
     def main_menu_loop(self): 
-        menu = MainMenu(WINDOW, self.game_snake) #Takes in pygame window, game_snake and title screen message
-        while menu.is_running:
+        """
+        Displays the main menu. Exits when user starts game or exits the program
+        """
+        while self.menu.is_running:
             if self.fps_controller.should_update_graphics_and_movement():
                 WINDOW.fill(MAIN_MENU_BG_COLOR)
                 
                 self.main_menu_event_handler.record_input()
 
                 if self.main_menu_event_handler.down_arrow_key_is_pressed: 
-                    menu.move_down_one_box()
+                    self.menu.move_down_one_box()
                 elif self.main_menu_event_handler.up_arrow_key_is_pressed: 
-                    menu.move_up_one_box()
+                    self.menu.move_up_one_box()
                 elif self.main_menu_event_handler.return_key_is_pressed:
-                    menu.selected_box.action()
+                    self.menu.selected_box.action()
                 elif self.main_menu_event_handler.escape_key_is_pressed:
-                    menu.open_new_page(menu.active_page.outer_page)
-                menu.update()
+                    self.menu.open_new_page(self.menu.active_page.outer_page)
                 
+                self.menu.display()
                 pygame.display.flip()
 
             self.fps_controller.limit_fps()
             
     def game_loop(self):
+        """
+        Runs the game. Ends when the user dies
+        """
         while self.game_snake.is_alive:
             if self.FPS_controller.should_update_graphics_and_movement():
                 WINDOW.fill(GAME_LOOP_BG_COLOR)

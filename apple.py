@@ -14,7 +14,8 @@ from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMN
 class Apple(): 
     def __init__(self):
         random_column, random_row = self.__get_random_grid_pos()
-        self.grid_pos = (random_column, random_row)
+        self.grid_pos = self.__get_random_grid_pos()
+        print(self.grid_pos)
         self.dipslay_pos = convert_grid_pos_to_display_pos(self.grid_pos)
         ## Sets apple's grid position to a random row and and column in the game grid
 
@@ -24,12 +25,14 @@ class Apple():
         unscaled_image = pygame.image.load('apple_test2.png') # Relative file path that loads properly because os code correct cwd
         self.loaded_img = pygame.transform.scale(unscaled_image, (self.width, self.height)) ## scales the image to the size of a cell in the grid
     
-    @property
-    def grid_pos(self):
-        return self.grid_pos
     
-    @grid_pos.setter
-    def grid_pos(self, new_grid_pos: tuple[int, int]): 
+    def change_grid_pos(self, new_grid_pos: tuple[int, int]): 
+        """
+        Changes the grid pos and updates the internal display pos
+
+        Parameters: 
+            - (tuple[int, int]) new_grid_pos : The new grid pos in format of (column, row)
+        """
         self.grid_pos = new_grid_pos
         self.dipslay_pos = convert_grid_pos_to_display_pos(self.dipslay_pos)
 
@@ -44,8 +47,8 @@ class Apple():
     def relocate(self):
         ## Getting Random Column and Row number
         #Places the apple at a random set of coors within the screen dimensions
-
-        self.grid_pos = self.__get_random_grid_pos()
+        random_grid_pos = self.__get_random_grid_pos()
+        self.grid_pos = self.change_grid_pos(random_grid_pos)
 
     def display(self, win: pygame.surface.Surface):
         win.blit(self.loaded_img, self.dipslay_pos)

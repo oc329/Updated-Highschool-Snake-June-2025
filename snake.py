@@ -5,8 +5,9 @@ pygame.init() #Initializes all pygame classes and functions
 import random 
 
 from apple import Apple
+from colors import ensure_is_RGB, SNAKE_STARTING_COLOR
 from enums import Direction 
-from screen_info import CELL_SIZE, GRID_TO_DISPLAY_POS, TOTAL_COLUMNS, TOTAL_ROWS
+from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMNS, TOTAL_ROWS
 
 
 
@@ -22,34 +23,34 @@ class Snake():
         ## starting num of pieces and speed multiple can be changed in instance's arguments 
         self.is_alive = True 
         self.starting_head_grid_pos = starting_head_grid_pos
-
-        self.starting_snake_segments_grid_positions: list[tuple[int, int]] = [] 
-
+        self.acceptable_directions = ((1, 0), (0, 1))
+        self.direction = starting_direction
+        
         self.starting_length = starting_length
+        self.starting_snake_segments_grid_positions: list[tuple[int, int]] = [] 
         self.starting_segment_grid_positions = []
 
         ## __build starting snake has to be called after self.starting_head_pos and self.starting length are instatiated
         self.__build_starting_snake()
-        
+
         ## Applied direction starts as (0, 0) because the player hasn't applied any direction yet with arrow key input
-        self.direction = self.starting_head_pos
+        
         self.applied_direction = (0, 0)
-        self.acceptable_directions = ((1, 0), (0, 1))
+        self.color = SNAKE_STARTING_COLOR
     
     def __build_starting_snake(self):
         """
         Sets the positions of the snake body based on the snake's head position and direction the snake is facing.
         Saves these positions after the first time
         """ 
-        self.snake_head.grid_pos = self.starting_head_grid_pos
-        head_x, head_y = self.starting_head_pos
+        head_x, head_y = self.starting_head_grid_pos
         x_dir, y_dir = self.direction
 
         ## Calculating snake body and inserting head at front
         self.starting_snake_segments_grid_positions  = [
                 (head_x - piece_i * x_dir, head_y - piece_i * y_dir)
-                for piece_i in range(1, self.starting_length)
-        ].insert(0, self.snake_head)
+                for piece_i in range(0, self.starting_length)
+        ]
         ## Sets segment positions equal to a copy of starting segment positions so it doesn't modify starting
         self.segment_grid_positions = self.starting_snake_segments_grid_positions.copy()
     
@@ -59,12 +60,8 @@ class Snake():
         Returns the total number of snake segments
         """
         return len(self.segment_grid_positions)
-    @property
-    def direction(self):
-        return self.direction
     
-    @direction.setter
-    def direction(self, new_direction: tuple[int, int]):
+    def change_direction(self, new_direction: tuple[int, int]):
         """
         Direction should represent the column and row change. 
         It should be(1, 0) or (0, 1)
@@ -156,16 +153,19 @@ class Snake():
             seg_column, seg_row = self.segment_grid_positions[seg_i]
             column_diff_to_old_head = old_head_column - seg_column
             row_diff_to_old_head = old_head_row - seg_row
-            self.segment_grid_positions[seg_i] = (new_head_column - column_diff_to_old_head, new_head_row - row_diff_to_old_head)
+            self.segment_grid_positions[seg_i] = (new_head_column - column_diff_to_old_head, new_head_row - row_diff_to_old_head)       
     
-    # def change_direction_based_on_direction_enum(self, direction_enum: Direction):
-    # 	"""
-    # 	Changes the direction based on the given direction enum ("up", "down", "left", "right")
-    # 	"""
-    # 	new_dire
+    def change_color(self, new_color: tuple[int, int, int]):
+        """
+        Changes the color of the snake to the new given color. 
+        Raies a value error if the new color is not a RGB tuple
 
-    def change_direction(self, new_direction: tuple[int, int]):
-        self.direction == new_direction
+        Parameters: 
+            (tuple[int, int, int]) new_color : RGB tuple (red, green, blue) with values btw 0 and 255
+        """
+        ensure_is_RGB(new_color)
+        self.color = new_color
+        
     def move_to_new_pos_and_change_direction(self, new_grid_position: tuple[int, int], new_direction: tuple[int, int]):
         """
         Moves the snake to the new grid position and changes the direction its going in.
@@ -187,9 +187,10 @@ class Snake():
         """
         Displays the snake on the screen
         """
-        for piece in self.pieces: 
-            piece.display(win) #Draws the rectangle each frame for snake piece onto screen  
-
+        for seg_grid_pos in self.segment_grid_positions:
+            pygame.draw.rect(win, self.color, rect = (*convert_grid_pos_to_display_pos(seg_grid_pos), *CELL_SIZE))
+                     
+        
 class MenuSnake(Snake):
 
     def teleport_to_other_side_of_wall(self):
@@ -230,31 +231,6 @@ class MenuSnake(Snake):
                 ## Adding 1 to piece's row position instead of subtracting, b/c height 0 is top of screen in computer graphics
 
                 piece_index += 1
-    
-    def teleport_to_grid_pos(self, new_snake_head_grid_pos): 
-        ## Used to Relocate Menu Snake in Colors Page
-        ## Direciton represents the axis it's along. Didn't want to have the arguments be x and y to signify axis so I chose the parameter name direction 
-
-        x_direction, y_direction = self.snake_head.move_dir
-        piece_index = 1 
-        self.snake_head.grid_pos = new_snake_head_grid_pos
-        
-        while piece_index < len(self.menu_snake.pieces):
-        
-        if(direction == "horizontal"): 
-            while piece_index < len(self.menu_snake.pieces):
-                previous_piece = self.menu_snake.pieces[piece_index - 1]
-                self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0], previous_piece.grid_pos[1] - 1 )
-                piece_index += 1
-
-        elif (direction == "vertical"):
-            while piece_index < len(self.menu_snake.pieces):
-                previous_piece = self.menu_snake.pieces[piece_index - 1]
-
-                self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0] + 1, previous_piece.grid_pos[1])
-                ## Adding 1 to piece's row position instead of subtracting, b/c height 0 is top of screen in computer graphics
-
-                piece_index += 1
 
     def snake(self): 
         ##Moves a snake across the bottom of the screen
@@ -267,17 +243,6 @@ class MenuSnake(Snake):
             self.menu_snake.change_location_going_right(new_grid_pos)
 
         self.menu_snake.update()
-
-
-    # ### Scrap Code
-    # ## Checking if the move will collide with a snake piece
-    # # potential_coors = ((self.snake_head.grid_pos["col"] + (self.snake_head.move_dir[0] * self.snake_head.speed, 1)), (self.snake_head.y + round(self.snake_head.move_dir[1] * self.snake_head.speed, 1)))
-    # # potential_head_rect = pygame.Rect(potential_coors[0], potential_coors[1], self.snake_head.width, self.snake_head.height)
-    # # Potential_head_rect is the where the snake_head's rectangle would be if the move executes. The if statement below makes sure that the new rect doesn't collide with the piece behind the snake head.
-
-    # ## If move doesn't collide with a piece then it executes
-    # # if potential_head_rect.colliderect(self.pieces[1].rect)== 0: # colliderectreturns 0 or 1. (0 means no collision)
-
 
 
 # @property

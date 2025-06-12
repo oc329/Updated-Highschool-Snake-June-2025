@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 @dataclass (frozen = True)
 class TextSettings(ABC):  
-	font: Font | SysFont
+	font: Font
 	anti_aliasing_is_on = True 
 
 @dataclass (frozen = True)
@@ -40,10 +40,11 @@ class BaseTextRenderer(ABC):
 		"""
 		raise NotImplementedError()
 	
-	def get_font(self) -> Font | SysFont:
+	def get_font(self) -> Font:
 		"""
 		Returns this renderer's text settings' font object
 		"""
+		return self.text_settings.font
 @dataclass (frozen = True)
 class TextRendererWithSingleColor(BaseTextRenderer):
 	color: tuple[int, int, int]
@@ -57,12 +58,10 @@ class TextRendererWithSingleColor(BaseTextRenderer):
 		Returns:
 			- The rendered pygame surface of the text
 		"""
-		return self.font.render(self.text, self.anti_aliasing_is_on, self.color)
+		print(self.text_settings)
+		return self.text_settings.font.render(text, self.text_settings.anti_aliasing_is_on, self.color)
 	
-	def change_color(self, new_color: tuple[int, int, int]):
-		self.color = new_color
-
-@dataclass
+@dataclass (frozen = True)
 class TextRendererWithMultiColor(BaseTextRenderer):
 	colors: Iterable[tuple[int, int ,int]] 
 	"""
@@ -78,11 +77,11 @@ class TextRendererWithMultiColor(BaseTextRenderer):
 			- (str) text: The text to render
 			- (Iterable[tuple[int, int, int]])): The iterable of colors to display the text with
 		"""
-		num_colors = len(self.oclors)
+		num_colors = len(self.colors)
 		char_surfaces: list[Surface] = []
 		for char_i, char in enumerate(text):
 			current_color = self.colors[char_i % num_colors] 
-			char_surface = MENU_BOX_FONT(char, self.anti_aliasing_is_on, current_color)
+			char_surface = self.text_settings.font.render(char, self.text_settings, self.text_settings.anti_aliasing_is_on, current_color)
 			char_surfaces.append(char_surface)
 		
 		## Every char is the same width and height
@@ -94,24 +93,18 @@ class TextRendererWithMultiColor(BaseTextRenderer):
 			text_surface.blit(char_surface, (char_width * char_surface_i, 0))
 
 		return text_surface
-
-	def change_color(self, new_colors: Iterable[tuple[int, int ,int]]):
-		"""
-		Changes the colors to the passed iterable of colors
-		"""
-		self.colors = new_colors
-
-GAME_SCORE_TEXT_SETTINGS = TextSettings(GAME_SCORE_FONT, GAME_SCORE_FONT_COLOR)
+	
+GAME_SCORE_TEXT_SETTINGS = TextSettings(GAME_SCORE_FONT)
 MENU_TITLE_TEXT_SETTINGS = TextSettings(MENU_TITLE_FONT)
-GAME_OVER_MSG_TEXT_SETTINGS = TextRendererWithSingleColor(GAME_SCORE_FONT)
+GAME_OVER_MSG_TEXT_SETTINGS = TextSettings(GAME_OVER_MSG_FONT)
 MENU_BOX_TEXT_SETTINGS = TextSettings(MENU_BOX_FONT)
 
 GAME_SCORE_TEXT_RENDERER = TextRendererWithSingleColor(GAME_SCORE_TEXT_SETTINGS, GAME_SCORE_FONT_COLOR)
 MENU_TITLE_TEXT_RENDERER = TextRendererWithSingleColor(MENU_TITLE_TEXT_SETTINGS, MENU_TITLE_FONT_COLOR)
 GAME_OVER_MSG_TEXT_RENDERER = TextRendererWithSingleColor(GAME_OVER_MSG_TEXT_SETTINGS, GAME_OVER_MSG_FONT_COLOR)
 
-MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER = TextRendererWithSingleColor(GAME_SCORE_FONT, MENU_BOX_DEFAULT_FONT_COLOR)
-MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER= TextRendererWithSingleColor(GAME_SCORE_FONT, MENU_BOX_HIGHLIGHTED_FONT_COLOR)
+MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, MENU_BOX_DEFAULT_FONT_COLOR)
+MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER= TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, MENU_BOX_HIGHLIGHTED_FONT_COLOR)
 RAINBOW_MENU_BOX_TEXT_RENDERER = TextRendererWithMultiColor(MENU_BOX_TEXT_SETTINGS, RAINBOW_SNAKE_COLORS)
 
 # @dataclass (frozen = True)

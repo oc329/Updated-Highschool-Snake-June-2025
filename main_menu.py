@@ -9,11 +9,11 @@ pygame.init()
 
 
 ### My Modules
-from colors import RAINBOW_SNAKE_COLORS, RED, WHITE
+from colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
 from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, SnakeSkinsSettingsPage
 from enums import PageName
-from screen_info import GRID_POS_TO_DISPLAY_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_COLORS_PAGE, MENU_TITLE_CENTER_POS, TOTAL_COLUMNS, TOTAL_ROWS, SCREEN_WIDTH, SCREEN_HEIGHT
-from text_settings import MENU_TITLE_TEXT_SETTINGS
+from screen_info import BOTTOM_MIDDLE_FIFTH_OF_SCREEN, MAIN_MENU_SNAKE_STARTING_GRID_POS, TOTAL_COLUMNS, TOP_MIDDLE_FIFTH_OF_SCREEN
+from text_surface import HighlightableEditableSingleLineTextSurface
 from snake import Snake 
 
 
@@ -21,7 +21,7 @@ class Menu:
     def __init__ (self, game_snake):
         self.is_running = False
         self.game_snake = game_snake
-        self.menu_snake = Snake(self.window, MAIN_MENU_SNAKE_STARTING_GRID_POS , "menu", starting_num_of_pieces = 5)
+        self.menu_snake = Snake(MAIN_MENU_SNAKE_STARTING_GRID_POS)
         
         
         ##Menu snake is a snake that moves along the bottom of the home page. Spawns in the middle bottom of screen and continues indefinitely
@@ -29,12 +29,13 @@ class Menu:
         self.TITLE_MESSAGE = "SNAKE"
 
         ### Preset Sizes
-        self.y_space_btw_main_menu_title_and_first_box = SCREEN_HEIGHT // 16
+        
         ## Determines the home page's y distance from title
         
-        self.main_menu_page = MainMenuPage(self, display_pos, display_pos, outer_page = None, child_pages= {})
-        self.screen_settings_page = ScreenSettingsPage(self, display_pos, display_pos, outer_page = None, child_pages= {})
-        self.snake_colors_settings_page = SnakeSkinsSettingsPage(display_pos, display_pos, outer_page = None, child_pages= {})
+        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
+        self.screen_settings_page = ScreenSettingsPage(self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
+        self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
+        
         self.active_page = self.main_menu_page
         
         self.page_hierarchy = {
@@ -55,11 +56,11 @@ class Menu:
         }
         self.set_page_relationshhups()
         ### User Page and Box Sselection
-        self.selected_box = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
+        self.selected_box : HighlightableEditableSingleLineTextSurface = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
 
         ### Creating the Arrow Highlighter 
-        space_between_arrow_and_box = self.play_box.width // 8
-        self.arrow = Arrow(space_between_arrow_and_box) 
+        space_between_arrow_and_box = self.selected_box.get_height() // 8
+        self.arrow = Arrow(self, space_between_arrow_and_box) 
         ## self is this menu class #uses menu to access selected box attribute 
         ## Arrow instance to be after self.selected_box since the Arrow's ininitalization references self.selected_box and construction method __init__ doesn't search for the attribute like calling a method does
         self.highlight_selected_box()
@@ -105,18 +106,18 @@ class Menu:
         to set each page's outer and child pages based on the page_hierarchy dict
         """
         top_of_hierarchy_page_dict = self.page_hierarchy[PageName.MAIN_MENU]
-        self._recursive_set_page[top_of_hierarchy_page_dict]
+        self._recursive_set_page(top_of_hierarchy_page_dict)
 
-    def _recursive_set_page_relationships(self, current_node: dict, parent_page: Page = None):
-        current_page = current_node["page"]
-        children_dict = current_node["children"]
+    def _recursive_set_page(self, current_node: dict, parent_page: Page = None):
+        current_page = current_node["Page"]
+        children_dict = current_node["Children"]
 
         if parent_page is not None:
             current_page.set_outer_page(parent_page)
 
         # Prepare and set child pages
         child_pages = {
-            page_name: child_data["page"]
+            page_name: child_data["Page"]
             for page_name, child_data in children_dict.items()
         }
 
@@ -125,12 +126,10 @@ class Menu:
         ## If th ere are no children pages it does nothing 
         for child_data in children_dict.values():
             self._recursive_set_page(child_data, current_page)
-            
-    
 
     ### For Color Boxes
     def change_both_snakes_colors(self, new_color_list):
-        self.menu_snake.change_all_colors(new_color_list)
+        #self.menu_snake.change_all_colors(new_color_list)
         self.game_snake.change_all_colors(new_color_list)
         
     ### For the Play Box
@@ -139,6 +138,7 @@ class Menu:
         Ends the Menu loop and starts the game
         """
         self.is_running = False
+        self.menu_snake
 
     def unhighlight_selected_box(self):
         """
@@ -229,67 +229,18 @@ class Menu:
 
         self.menu_snake.update()
 
-    def display(self): 
+    def display(self, win: pygame.surface.Surface): 
         ## Snake Animation for Only Home Page
-        if self.active_page == self.home_page: 
-            self.snake() #Animates a snake moving across the screen 
+        # if self.active_page == self.home_page: 
+        #     self.snake() #Animates a snake moving across the screen 
 
-        elif self.active_page == self.colors_page: 
-            self.menu_snake.update()
+        # elif self.active_page == self.colors_page: 
+        #     self.menu_snake.update()
 
         ## Updating page components 
-        self.arrow.update()
-        self.display.display() #Updates all menu boxes that are part of the page and additonal boxes like title screen if needed
-        
-
-    
+        self.arrow.display(win)
+        self.active_page.display(win) #Updates all menu boxes that are part of the page and additonal boxes like title screen if needed
 
 
 
 
-    
-
-#### Notes and Scrapped Code 
-    ## self can be taken in as an argument. #Ex is the title instance that takes in self (the menu class) as an argument
-    
-    ## arrow_width= self.play_box.width #so the arrow's length doesn't change with each box and instead is based on the play boxes width
-    ##arrow_height = self.selected_box.height //4
-    ##self.arrow    = Object(self.window, ##self.space_between_arrow, self.selected_box.y - ##self.selected_box.height//2, arrow_width, arrow_height)
-
-    ### Code for Splitting the Message into different colored parts 
-    # #while message_part_index < len(self.font_color):
-    #         #beg_of_part = len(self.message) // len(self.font_color) * font_color_index 
-    #         ### Splits the message into equal parts and then multiplies it by the index of the current_color.
-    #         ### Algorithm above is wrong. This code just splits the message into a number of parts instead of the colors being on alternating characters so I might have to scrap it. I'm going to create an algorithm to have each char's color be based on a iteration of the color box's font_color list 
-    #         #end_of_part =    len(self.message) // len(self.font_color) * (font_color_index + 1) 
-#    ### Executable Commands
-#         #self.action = None
-
-#         #if self.type == "transition":
-#             #pass #Couldn't have the action created in the menu box since it wouldn't have access to the menu's current active page and the next page that each transiton menu box would want to go to. Putting the action methods in the Main_menu class makes more sense since I can pass the action as the argument and can pass the desired page for transiiton boxes in that action
-
-#         #elif self.type == "color":
-#             self.menu.change_both_snakes_colors(self.font_color)
-
-#         #elif self.type == "play":
-#             #self.action = self.end_menu_loop #Even though .end_menu_loop isn't a function. I didn't call it with () b/c I want to later call .action() in main
-
-## self.char_size= dict() ##have to declare dictionary first using dict() or {} before I can insert keys and values
-     
-
-# def position_all_boxes(self): 
-#     # Home page was previously just a list, but I needed to change it to a class to organize variables with attributes
-#     self.home_page.item_list[0].y = self.title.y + self.title.height + self.y_space_btw_title_and_first_box
-#     self.home_page[0].x = self.home_page.item_list[0].off_center["x"]
-
-#     index = 1
-#     while index < len(self.home_page):
-#         self.home_page.item_list[index].y = self.home_page.item_list[0].y + self.home_page.compacted_char_size
-#         self.home_page.item_list.x =    self.home_page.x
-#         index += 1 
-#     self.arrow.change_box()
-
-# self.home_page_item_boxes = []
-# self.home_page_additional_boxes = []
-# self.settings_page_item_boxes = []
-# self.

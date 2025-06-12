@@ -50,20 +50,16 @@ class BaseTextSurface(ABC):
         self.text_renderer = text_renderer
         self.pos_anchor = pos_anchor
         self.display_pos = display_pos
-        
+
         self._render_current_text()
         self._calculate_display_pos_based_on_anchor()
     
-    @property
-    def display_pos(self):
-        return self.display_pos
     
-    @display_pos.setter
-    def display_pos(self, new_display_pos: tuple[int, int]):
+    def change_display_pos(self, new_display_pos: tuple[int, int]):
         """
         Raises ValueError if display position is not on screen
         """
-        ensure_pos_is_on_screen()
+        ensure_pos_is_on_screen(new_display_pos)
         self.display_pos = new_display_pos
 
     def change_pos_anchor(self, new_pos_anchor: str):
@@ -185,24 +181,6 @@ class SingleLineTextSurface(BaseTextSurface):
     def display(self, win):
         win.blit(self.rendered_text, self.display_pos)
 
-class HighlightableSingleLineTextSurface(SingleLineTextSurface):
-    def __init__(self, text, pos, default_text_renderer: BaseTextRenderer, highlight_text_renderer: BaseTextRenderer, pos_anchor = 'start'):
-        super().__init__(text, pos, default_text_renderer, pos_anchor)
-        self.default_rendered_text = self.rendered_text
-        self.highlighted_rendered_text = highlight_text_renderer.render(text)
-
-    def highlight(self):
-        """
-		Switches the text's color to the highlighted color
-		"""
-        self.rendered_text = self.highlighted_rendered_text 
-
-    def unhighlight(self):
-        """
-		Switches the text's color to the default color
-		"""
-        self.rendered_text = self.default_rendered_text
-
 
 class EditableTextSurfaceMixin:
     def change_text(self, new_text: str):
@@ -223,10 +201,6 @@ class EditableTextSurfaceMixin:
         """
         self.display_pos = new_pos
         self._calculate_display_pos_based_on_anchor()
-
-    def change_color(self, new_color):
-        self.text_renderer.change_color(new_color)
-        self._render_current_text()
     
     def change_text_and_pos(self, new_text: str, new_pos: tuple[int, int]):
         self.change_pos(new_pos)
@@ -239,8 +213,8 @@ class EditableTextSurfaceMixin:
         """
         self._render_current_text()
         self._calculate_display_pos_based_on_anchor(self.display_pos)
-        
  
+
 class EditableSingleLineTextSurface(SingleLineTextSurface, EditableTextSurfaceMixin):
     """
     Combines Editing Functionality from Mixin with Single Line Text Surface Class
@@ -248,6 +222,26 @@ class EditableSingleLineTextSurface(SingleLineTextSurface, EditableTextSurfaceMi
     Surface Class that stores text and blits it to the screen. Text and position can change with methods.
     """
     pass
+
+class HighlightableEditableSingleLineTextSurface(EditableSingleLineTextSurface):
+    def __init__(self, text, display_pos: tuple[int, int], default_text_renderer: BaseTextRenderer, highlight_text_renderer: BaseTextRenderer, pos_anchor = 'start'):
+        super().__init__(text, display_pos, default_text_renderer, pos_anchor)
+        self.default_text_renderer = default_text_renderer
+        self.highlight_text_renderer = highlight_text_renderer
+        
+    def highlight(self):
+        """
+		Switches the text's color to the highlighted color
+		"""
+        self.text_renderer = self.highlight_text_renderer 
+        self._render_current_text()
+
+    def unhighlight(self):
+        """
+		Switches the text's color to the default color
+		"""
+        self.text_renderer = self.default_text_renderer
+        self._render_current_text()
 
 class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixin):
     """
