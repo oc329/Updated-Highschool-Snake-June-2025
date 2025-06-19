@@ -6,16 +6,16 @@ pygame.init()
 from colors import ARROW_COLOR, RAINBOW_SNAKE_COLORS
 from enums import PageName
 from event_handler import quit_program
-from screen_info import CENTER_OF_SCREEN, MIDDLE_TOP_OF_SCREEN, SCREEN_HEIGHT
+from screen_info import ARROW_SIZE, CENTER_OF_SCREEN, MIDDLE_TOP_OF_SCREEN, SCREEN_HEIGHT, SCREEN_WIDTH
 from snake import Snake
 from text_settings import BaseTextRenderer, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, MENU_BOX_TEXT_SETTINGS, MENU_TITLE_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER, TextRendererWithSingleColor
 from text_surface import SingleLineTextSurface, HighlightableEditableSingleLineTextSurface
 
 if TYPE_CHECKING:
-    from main_menu import Menu  # Import only for type hinting
+	from main_menu import Menu  # Import only for type hinting
 
 
-    
+	
 
 class Page(ABC):
 	def __init__(self, menu: 'Menu'):
@@ -97,7 +97,6 @@ class PageWithBoxesCompactedIntoSector(Page):
 			menu_box.change_pos_anchor(self.pos_anchor)
 			y_coor = self.top_of_sector_pos[1] + self.box_display_interval * menu_box_i
 			menu_box_display_pos = (self.top_of_sector_pos[0], y_coor)
-			print(menu_box_display_pos, menu_box_i)
 			menu_box.change_pos(menu_box_display_pos)
 
 class MainMenuPage(PageWithBoxesCompactedIntoSector):
@@ -141,10 +140,11 @@ class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 			text = color_name
 			default_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
 			highlighted_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
-			self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, CENTER_OF_SCREEN, text, default_text_renderer, highlighted_text_renderer))
+			self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, CENTER_OF_SCREEN, text, default_text_renderer, default_text_renderer))
+		
 		## Adding Rainbow Menu Box
 		rainbow_text = "RAINBOW"
-		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, CENTER_OF_SCREEN, "RAINBOW", RAINBOW_MENU_BOX_TEXT_RENDERER, highlighted_text_renderer)
+		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, CENTER_OF_SCREEN, "RAINBOW", RAINBOW_MENU_BOX_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER)
 		self.menu_boxes.append(rainbow_color_menu_box)
 
 
@@ -237,71 +237,73 @@ class SettingsMenuBoxLambdaTry(BaseMenuBox):
 		"""
 		self.on_click_func()
 
-
-## I created an arrow class so I could customize the arrow more easily and in case I wanted to create multiple instances of the arrow instead of moving it from page to page
 class Arrow:
 	"""
-	Arrow is an object shaped like an arrow that can be displayed to the left or right side of a rect
+	An arrow indicator rendered to the left or right of a selected menu box.
 	"""
-	def __init__(self, menu: 'Menu', space_btw_box_and_arrow, side_of_box: str = "left"):
-		self.space_btw_arrow_and_box = space_btw_box_and_arrow
+
+	def __init__(self, menu: 'Menu', space_btw_box_and_arrow: int, side_of_box: str = "left"):
 		self.menu = menu
-		self.selected_box: BaseMenuBox | None = self.menu.selected_box
+		self.space_btw_box_and_arrow = space_btw_box_and_arrow
 		self.side_of_box = side_of_box
-		self.display_pos = (self._get_arrow_x_based_on_side_of_box(self.side_of_box), self._get_y_coor_based_on_box(self.selected_box))
-		self.width, self.height = (self.menu.selected_box.get_width(),  self.menu.selected_box.get_height())
 
-	def _get_arrow_pos_to_left_side_of_selected_box(self):
-		self.x = self.selected_box.display[0] - self.menu.space_between_arrow - self.width
+		self.selected_box: BaseMenuBox = self.menu.selected_box
+		ratio_of_arrow_to_screen = 20
+		self.width, self.height = ARROW_SIZE
+		# self.width = (SCREEN_WIDTH // ratio_of_arrow_to_screen)
+		# self.height = (self.selected_box.get_height() // (ratio_of_arrow_to_screen * 3 // 2))
 
-	def _get_arrow_pos_to_right_side_of_selected_box(self):
-		self.x = self.selected_box.display[0] + self.selected_box.get_width() + self.space_btw_arrow_and_box + self.width
+	@property
+	def x(self) -> int:
+		"""
+		Computes the arrow's x-position based on the current side and selected box.
+		"""
+		box_x = self.selected_box.display_pos[0]
+		box_width = self.selected_box.get_width()
 
-	def _get_arrow_x_based_on_side_of_box(self, side_of_box: str):
-		"""
-		Calculates the x coor based on whether side of box is "right" or "left".
-		Raises a ValueError if it isn't.
-		"""
-		if side_of_box not in ("right", "left"):
-			raise ValueError("Not a side. Please pass 'right' or 'left' to change the side ")
-		if side_of_box == self.side_of_box:
-				return
+		if self.side_of_box == "left":
+			return box_x - self.space_btw_box_and_arrow - self.width
+		elif self.side_of_box == "right":
+			return box_x + box_width + self.space_btw_box_and_arrow
+		else:
+			raise ValueError("side_of_box must be 'left' or 'right'.")
 
-		if side_of_box == "right":
-			return self._get_arrow_pos_to_right_side_of_selected_box()
-				## Adds together the selected box's x and width, the menu's spacing between box and arrow, and the arrow's width to position the arrow on the right hand side of that box
+	@property
+	def y(self) -> int:
+		"""
+		Computes the arrow's y-position centered vertically with the box.
+		"""
+		box_y = self.selected_box.display_pos[1]
+		box_height = self.selected_box.get_height()
+		return box_y + box_height // 2 - self.height // 2
 
-		elif side_of_box == "left":
-			return self._get_arrow_pos_to_left_side_of_selected_box()
-		
-	def change_side_of_box(self, new_side_of_box: str):
+	@property
+	def display_pos(self) -> tuple[int, int]:
+		return (self.x, self.y)
+
+	def update_selected_box(self):
 		"""
-		Changes the arrow to another side of the box ("right", or "left").
-		If the arrow is already on that side then it does nothing.
+		Updates the selected box reference from the menu.
 		"""
-		self.x = self.get_arrow_x_based_on_side_of_box(new_side_of_box)
-		self.side_of_box = new_side_of_box
-		
-	def _update_pos_based_on_current_box(self):
+		self.selected_box = self.menu.selected_box
+
+	def change_box(self, new_box: BaseMenuBox):
 		"""
-		Sets the y position of the arrow to the middle y of its current selected box
-		"""
-		self.y = self._get_y_coor_based_on_box(self.selected_box)
-	
-	def _get_y_coor_based_on_box(self, box_to_select_with_arrow: BaseMenuBox):
-		return box_to_select_with_arrow.display_pos[1] + (self.menu.selected_box.get_height() // 2)
-		
-	def change_box(self, new_box: BaseMenuBox): #the positions don't change atuomatically so I have to set the x and y coordiantes relative to the side they're on
-		"""
-		Changes the arrows selected box to the new passed box
-		Parameters:
-				- (MenuBox) new_box: The new box to display the arrow next to
+		Changes which box the arrow points to.
 		"""
 		self.selected_box = new_box
-		self.y = self._get_y_coor_based_on_box(self.selected_box)
-		## selected_box.height //2 puts the arrow's y_coor halfway down the box
+
+	def change_side_of_box(self, new_side_of_box: str):
+		"""
+		Changes the side of the box where the arrow is displayed.
+		"""
+		if new_side_of_box not in ("left", "right"):
+			raise ValueError("side_of_box must be 'left' or 'right'.")
+		self.side_of_box = new_side_of_box
 
 	def display(self, win: pygame.surface.Surface):
-		#Draws arrow to screen. (Arrow is just a long rect)
+		"""
+		Draws the arrow on the screen.
+		"""
 		pygame.draw.rect(win, ARROW_COLOR, (*self.display_pos, self.width, self.height))
 

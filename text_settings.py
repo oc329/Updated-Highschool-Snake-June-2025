@@ -58,7 +58,6 @@ class TextRendererWithSingleColor(BaseTextRenderer):
 		Returns:
 			- The rendered pygame surface of the text
 		"""
-		print(self.text_settings)
 		return self.text_settings.font.render(text, self.text_settings.anti_aliasing_is_on, self.color)
 	
 @dataclass (frozen = True)
@@ -81,13 +80,14 @@ class TextRendererWithMultiColor(BaseTextRenderer):
 		char_surfaces: list[Surface] = []
 		for char_i, char in enumerate(text):
 			current_color = self.colors[char_i % num_colors] 
-			char_surface = self.text_settings.font.render(char, self.text_settings, self.text_settings.anti_aliasing_is_on, current_color)
+			char_surface = self.text_settings.font.render(char, self.text_settings.anti_aliasing_is_on, current_color)
 			char_surfaces.append(char_surface)
 		
 		## Every char is the same width and height
 		char_width, text_height = char_surfaces[0].get_size()
 		text_width = char_width * len(text)
 		text_surface = Surface((text_width, text_height), SRCALPHA)
+		text_surface.set_alpha(255)
 
 		for char_surface_i, char_surface in enumerate(char_surfaces):
 			text_surface.blit(char_surface, (char_width * char_surface_i, 0))

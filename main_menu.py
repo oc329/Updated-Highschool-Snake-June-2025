@@ -12,14 +12,14 @@ pygame.init()
 from colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
 from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, SnakeSkinsSettingsPage
 from enums import PageName
-from screen_info import BOTTOM_MIDDLE_FIFTH_OF_SCREEN, MAIN_MENU_SNAKE_STARTING_GRID_POS, TOTAL_COLUMNS, TOP_MIDDLE_FIFTH_OF_SCREEN
+from screen_info import BOTTOM_MIDDLE_FIFTH_OF_SCREEN, CENTER_OF_SCREEN, MAIN_MENU_PAGE_END_POS, MAIN_MENU_PAGE_STARTING_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, SCREEN_HEIGHT, TOTAL_COLUMNS, TOP_MIDDLE_FIFTH_OF_SCREEN
 from text_surface import HighlightableEditableSingleLineTextSurface
 from snake import Snake 
 
 
 class Menu: 
     def __init__ (self, game_snake):
-        self.is_running = False
+        self.is_running = True
         self.game_snake = game_snake
         self.menu_snake = Snake(MAIN_MENU_SNAKE_STARTING_GRID_POS)
         
@@ -32,7 +32,7 @@ class Menu:
         
         ## Determines the home page's y distance from title
         
-        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
+        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, MAIN_MENU_PAGE_STARTING_POS, MAIN_MENU_PAGE_END_POS)
         self.screen_settings_page = ScreenSettingsPage(self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
         self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
         
@@ -43,14 +43,14 @@ class Menu:
             {
                 "Page" : self.main_menu_page,
                 "Children": {
-                    PageName.SNAKE_SKIN_SETTINGS: {
-                        "Page": PageName.SNAKE_SKIN_SETTINGS, 
-                        "Children" : {}
-                        },
                     PageName.SNAKE_SKIN_SETTINGS :{
                         "Page": self.snake_colors_settings_page, 
                         "Children": {}
                     }
+                },
+                PageName.SCREEN_SETTINGS: {
+                        "Page": self.screen_settings_page, 
+                        "Children" : {}
                 }
             }
         }
@@ -65,6 +65,13 @@ class Menu:
         ## Arrow instance to be after self.selected_box since the Arrow's ininitalization references self.selected_box and construction method __init__ doesn't search for the attribute like calling a method does
         self.highlight_selected_box()
 
+    def open_outer_page(self):
+        """
+        Changes the page to the outer page of this page if there is one. 
+        Otherwise does nothing.
+        """
+        self.change_page(self.active_page.outer_page)
+        
     ## For transition boxes
     def change_page(self, new_page: 'Page'): 
         """
@@ -73,14 +80,15 @@ class Menu:
         Parameters: 
             - new_page: The new page to set as active
         """
-        if new_page is not None:
-            # if statement is there bause home_page.outer_page has a value of none since the home page has not outer page doesn't have an outer page to escape to when user presses esc
-            self.active_page = new_page
-            self.selected_box.unhighlight()
-            ## ^ so the font color of the selected_box of the previous page doesn't remain white
-            self.selected_box = new_page.item_list[0]
-            self.highlight_selected_box() 
-            ## Changes the first box of the new_page to the selected_box and highlights it (changes it to the highlighting color and puts the arrow's position relative to it)
+        ## if statement is there bause main_menu_page.outer_page has a value of none 
+        if new_page is None:
+            return 
+        
+        self.selected_box.unhighlight()
+        self.active_page = new_page
+        self.selected_box = new_page.menu_boxes[0]
+        self.highlight_selected_box() 
+            
 
             # ## Brute Forcing Snake Relocation to correct spot when user opens open page or colors pages
             # if(new_page == self.colors_page):
@@ -109,6 +117,13 @@ class Menu:
         self._recursive_set_page(top_of_hierarchy_page_dict)
 
     def _recursive_set_page(self, current_node: dict, parent_page: Page = None):
+        """
+        Recursively dives through page hierarchy dict to set the child outer page relationships. 
+
+        Parameters: 
+            - (dict) current_node: The current page dict in the dictionary
+            - (Page) parent_page: The parent page of this current Page
+        """
         current_page = current_node["Page"]
         children_dict = current_node["Children"]
 
@@ -128,9 +143,8 @@ class Menu:
             self._recursive_set_page(child_data, current_page)
 
     ### For Color Boxes
-    def change_both_snakes_colors(self, new_color_list):
-        #self.menu_snake.change_all_colors(new_color_list)
-        self.game_snake.change_all_colors(new_color_list)
+    def change_snake_color(self, new_color):
+        self.menu_snake.change_all_colors(new_color)
         
     ### For the Play Box
     def start_game(self):
@@ -162,85 +176,42 @@ class Menu:
             - (int) new_box_index: The index of the new box to select
         """
         self.unhighlight_selected_box()
-        self.selected_box = self.active_page.item_list[new_box_index] 
+        self.selected_box = self.active_page.menu_boxes[new_box_index] 
         self.highlight_selected_box()
+        self.arrow.update_selected_box()
 
     def move_down_one_box(self):
         """
-        Moves the selected box down one if possible. 
-        Otherwise does nothing. 
+        Moves the selected box down.. 
+        If it's the last box, then it does nothing. 
         """
-        current_box_index = self.active_page.item_list.index(self.selected_box)
-        number_of_boxes = len(self.active_page.item_list)
+        current_box_index = self.active_page.menu_boxes.index(self.selected_box)
+        number_of_boxes = len(self.active_page.menu_boxes)
         
         if current_box_index == (number_of_boxes - 1):
             return
-        self.selected_box.font_color =    self.selected_box.default_font_color 
-            # A color box's default font_color is set upon defining by the passed argument and never changes 
                     
         self.select_box(current_box_index + 1)
         
     def move_up_one_box(self):
         """
-        Moves the selected box up one if possible. Otherwise does nothing.
+        Moves the selected box up one if it's not the first box. Otherwise does nothing.
         """
-        current_box_index = self.active_page.item_list.index(self.selected_box)
+        current_box_index = self.active_page.menu_boxes.index(self.selected_box)
         
         if current_box_index == 0:
             return
-        self.selected_box.font_color =    self.selected_box.default_font_color 
-            # A color box's default font_color is set upon defining by the passed argument and never changes 
-                    
-        self.select_box(current_box_index + 1)
+                            
+        self.select_box(current_box_index - 1)
             
 
-    def relocate_menu_snake(self, new_snake_head_grid_pos, direction = "horizontal"): 
-        ## Used to Relocate Menu Snake in Colors Page
-        ## Direciton represents the axis it's along. Didn't want to have the arguments be x and y to signify axis so I chose the parameter name direction 
-
-        self.menu_snake.snake_head.grid_pos = new_snake_head_grid_pos    #Assigns new coordinates to snake head
-        piece_index = 1 ## Snake head has already been assinged coordinates 
-        
-        if(direction == "horizontal"): 
-            while piece_index < len(self.menu_snake.pieces):
-                previous_piece = self.menu_snake.pieces[piece_index - 1]
-                self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0], previous_piece.grid_pos[1] - 1 )
-                piece_index += 1
-
-        elif (direction == "vertical"):
-            while piece_index < len(self.menu_snake.pieces):
-                previous_piece = self.menu_snake.pieces[piece_index - 1]
-
-                self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0] + 1, previous_piece.grid_pos[1])
-                ## Adding 1 to piece's row position instead of subtracting, b/c height 0 is top of screen in computer graphics
-
-                piece_index += 1
-
-
-    def snake(self): 
-        ##Moves a snake across the bottom of the screen
-        self.menu_snake.move()
-        menu_snake_head_row, menu_snake_head_column = self.menu_snake.snake_head.grid_pos
-         
-        ### Teleports snake to left side of screen when it snake_head hits right side    
-        if menu_snake_head_column > TOTAL_COLUMNS:
-            new_grid_pos = (menu_snake_head_row, 0)
-            self.menu_snake.change_location_going_right(new_grid_pos)
-
-        self.menu_snake.update()
-
     def display(self, win: pygame.surface.Surface): 
-        ## Snake Animation for Only Home Page
-        # if self.active_page == self.home_page: 
-        #     self.snake() #Animates a snake moving across the screen 
-
-        # elif self.active_page == self.colors_page: 
-        #     self.menu_snake.update()
-
-        ## Updating page components 
+        """
+        Displays the selection arrow and
+        all the current page's menu boxes and additional items
+        """
+        self.active_page.display(win) 
         self.arrow.display(win)
-        self.active_page.display(win) #Updates all menu boxes that are part of the page and additonal boxes like title screen if needed
-
 
 
 

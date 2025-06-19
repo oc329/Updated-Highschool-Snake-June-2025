@@ -14,4 +14,3 @@ class PageName(Enum):
     SNAKE_SKIN_SETTINGS = "Snake Skins"
     SCREEN_SETTINGS = "Screen Settings"
 
-print()

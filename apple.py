@@ -11,11 +11,10 @@ from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMN
 ### Setting Current Working Directory Equal to apple.py's directory (for relative self.loaded_img path)
 
 
-class Apple(): 
+class Apple: 
     def __init__(self):
         random_column, random_row = self.__get_random_grid_pos()
         self.grid_pos = self.__get_random_grid_pos()
-        print(self.grid_pos)
         self.dipslay_pos = convert_grid_pos_to_display_pos(self.grid_pos)
         ## Sets apple's grid position to a random row and and column in the game grid
 
@@ -34,7 +33,7 @@ class Apple():
             - (tuple[int, int]) new_grid_pos : The new grid pos in format of (column, row)
         """
         self.grid_pos = new_grid_pos
-        self.dipslay_pos = convert_grid_pos_to_display_pos(self.dipslay_pos)
+        self.dipslay_pos = convert_grid_pos_to_display_pos(self.grid_pos)
 
     def __get_random_grid_pos(self):
         """

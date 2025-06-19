@@ -29,7 +29,7 @@ class AbstractEventHandler(ABC):
         """
         for key_int_value in self._keys_to_track:
             key_name = pygame.key.name(key_int_value).lower()
-            key_name_with_underscore_instead_of_space = key_name.replace(" ", "_")
+            key_name = key_name.replace(" ", "_") ## Replaces spaces with underscores
 
             ## Adding arrow word to arrow key properties
             if key_name in ("up", "down", "left", "right"):
@@ -48,6 +48,8 @@ class AbstractEventHandler(ABC):
                 if event.key in self.key_states:
                     is_pressed = (event.type == pygame.KEYDOWN)
                     self.key_states[event.key] = is_pressed
+            elif event.type == pygame.QUIT:
+                quit_program()
 
 
 class MainMenuEventHamdler(AbstractEventHandler): 
@@ -77,7 +79,7 @@ class GameLoopEventHandler(AbstractEventHandler):
     def direction_key_pressed(self) -> Direction | None:
         """
         Returns the Direction of the currently pressed arrow key.
-        The direction is the Driectio  enum 
+        The direction is the Direction enum.
         If no arrow key is pressed, returns None.
         """
 

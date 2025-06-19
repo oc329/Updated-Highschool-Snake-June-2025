@@ -23,12 +23,12 @@ class Snake():
         ## starting num of pieces and speed multiple can be changed in instance's arguments 
         self.is_alive = True 
         self.starting_head_grid_pos = starting_head_grid_pos
-        self.acceptable_directions = ((1, 0), (0, 1))
+        self.acceptable_directions = ((1, 0), (-1, 0), (0, -1), (0, 1))
         self.direction = starting_direction
         
         self.starting_length = starting_length
-        self.starting_snake_segments_grid_positions: list[tuple[int, int]] = [] 
-        self.starting_segment_grid_positions = []
+        self.starting_segment_grid_positions: list[tuple[int, int]] = [] 
+        self.segment_grid_positions = []
 
         ## __build starting snake has to be called after self.starting_head_pos and self.starting length are instatiated
         self.__build_starting_snake()
@@ -47,12 +47,12 @@ class Snake():
         x_dir, y_dir = self.direction
 
         ## Calculating snake body and inserting head at front
-        self.starting_snake_segments_grid_positions  = [
+        self.starting_segment_grid_positions  = [
                 (head_x - piece_i * x_dir, head_y - piece_i * y_dir)
                 for piece_i in range(0, self.starting_length)
         ]
         ## Sets segment positions equal to a copy of starting segment positions so it doesn't modify starting
-        self.segment_grid_positions = self.starting_snake_segments_grid_positions.copy()
+        self.segment_grid_positions = self.starting_segment_grid_positions.copy()
     
     @property
     def total_length(self):
@@ -69,7 +69,9 @@ class Snake():
         if not isinstance(new_direction, tuple): 
             return ValueError("Should be tuple")
         if new_direction not in self.acceptable_directions:
-            raise ValueError(f"Direction should be one of these: {self.acceptable_directions}")
+            raise ValueError(f"Direction {new_direction} should be one of these: {self.acceptable_directions}")
+        
+        self.direction = new_direction
                 
     def is_colliding_with_wall(self):
         """
@@ -78,9 +80,9 @@ class Snake():
 
         snake_head_column, snake_head_row = self.segment_grid_positions[0]
 
-        return not(0 <= snake_head_column < TOTAL_ROWS and 0 <= snake_head_row < TOTAL_COLUMNS)
+        return not(0 <= snake_head_column < TOTAL_COLUMNS and 0 <= snake_head_row < TOTAL_ROWS)
     
-    def is_collidng_with_itself(self):
+    def is_colliding_with_self(self):
         """
         Returns True if the snake's head is colliding with its body
         """
@@ -94,7 +96,7 @@ class Snake():
         Parameters: 
             - (Apple) apple_obj: The given apple_obj to check against
         """
-        return self.snake_head.rect.colliderect(apple_obj.rect)
+        return self.segment_grid_positions[0] == apple_obj.grid_pos
     
     ### Wall Collisions and Self Collisions Combined
     def check_for_fatal_collisions(self):
@@ -108,16 +110,8 @@ class Snake():
         ## Returns Bool if snake has collided with wall or is colliding self  
         self.is_alive = not(self.is_colliding_with_wall() or self.is_colliding_with_self())
 
-    def __apply_direction_change(self):
-        """
-        Apply the player's direction change to the snake.
-        """
-        ## The snake displayed in menu may be motionless (0, 0 in x,y directions)
-        if self.applied_direction != (0, 0):
-            self.direction = self.applied_direction
-            self.applied_direction = (0, 0)
 
-    def __move_snake_forward_by_one(self):
+    def move_forward_by_one(self):
         """
         Move the snake forward by one tile.
         """
@@ -211,29 +205,33 @@ class MenuSnake(Snake):
         
 
     def teleport_snake(self, new_snake_head_grid_pos, direction = "horizontal"): 
-        ## Used to Relocate Menu Snake in Colors Page
-        ## Direciton represents the axis it's along. Didn't want to have the arguments be x and y to signify axis so I chose the parameter name direction 
-
+        """
+        Teleports the snake to the given grid position. Keeps the direction going the same
+        
+        """
         self.menu_snake.snake_head.grid_pos = new_snake_head_grid_pos    #Assigns new coordinates to snake head
         piece_index = 1 ## Snake head has already been assinged coordinates 
         
         if(direction == "horizontal"): 
             while piece_index < len(self.menu_snake.pieces):
                 previous_piece = self.menu_snake.pieces[piece_index - 1]
-                self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0], previous_piece.grid_pos[1] - 1 )
+                self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0], previous_piece.grid_pos[1] - 1)
                 piece_index += 1
 
         elif (direction == "vertical"):
             while piece_index < len(self.menu_snake.pieces):
                 previous_piece = self.menu_snake.pieces[piece_index - 1]
-
                 self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0] + 1, previous_piece.grid_pos[1])
                 ## Adding 1 to piece's row position instead of subtracting, b/c height 0 is top of screen in computer graphics
-
                 piece_index += 1
 
-    def snake(self): 
-        ##Moves a snake across the bottom of the screen
+    def move_by_1_until_wall(self): 
+        """
+        Moves the snake by one.
+        Once it reaches the side of the screen, it teleports it to the other side. 
+        Only works going right for now 
+        """
+
         self.menu_snake.move()
         menu_snake_head_row, menu_snake_head_column    = self.menu_snake.snake_head.grid_pos
          
@@ -251,3 +249,25 @@ class MenuSnake(Snake):
     # 	Returns the first snake segment grid position in the snake
     # 	"""
     # 	return self.segment_grid_positions[0]
+
+# def teleport_snake(self, new_snake_head_grid_pos, direction = "horizontal"): 
+#         """
+        
+#         """
+#         self.menu_snake.snake_head.grid_pos = new_snake_head_grid_pos    #Assigns new coordinates to snake head
+#         piece_index = 1 ## Snake head has already been assinged coordinates 
+        
+#         if(direction == "horizontal"): 
+#             while piece_index < len(self.menu_snake.pieces):
+#                 previous_piece = self.menu_snake.pieces[piece_index - 1]
+#                 self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0], previous_piece.grid_pos[1] - 1)
+#                 piece_index += 1
+
+#         elif (direction == "vertical"):
+#             while piece_index < len(self.menu_snake.pieces):
+#                 previous_piece = self.menu_snake.pieces[piece_index - 1]
+
+#                 self.menu_snake.pieces[piece_index] = (previous_piece.grid_pos[0] + 1, previous_piece.grid_pos[1])
+#                 ## Adding 1 to piece's row position instead of subtracting, b/c height 0 is top of screen in computer graphics
+
+#                 piece_index += 1

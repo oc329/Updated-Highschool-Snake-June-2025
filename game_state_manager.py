@@ -20,7 +20,7 @@ class GameStateManager:
         self.main_menu_event_handler = MainMenuEventHamdler()
         self.game_loop_event_handler = GameLoopEventHandler()
         self.FPS = 60
-        self.FPS_controller = FPSController(self.FPS)
+        self.fps_controller = FPSController(self.FPS)
         
         self.game_snake = Snake(GAME_SNAKE_STARTING_GRID_POS)
         self.game_apple = Apple()
@@ -38,6 +38,7 @@ class GameStateManager:
         Runs the game by running all the loops
         """
         self.main_menu_loop()
+        self.game_loop()
 
     def main_menu_loop(self): 
         """
@@ -54,11 +55,11 @@ class GameStateManager:
                 elif self.main_menu_event_handler.up_arrow_key_is_pressed: 
                     self.menu.move_up_one_box()
                 elif self.main_menu_event_handler.return_key_is_pressed:
-                    self.menu.selected_box.action()
+                    self.menu.selected_box.on_click()
                 elif self.main_menu_event_handler.escape_key_is_pressed:
-                    self.menu.open_new_page(self.menu.active_page.outer_page)
+                    self.menu.open_outer_page()
                 
-                self.menu.display()
+                self.menu.display(WINDOW)
                 pygame.display.flip()
 
             self.fps_controller.limit_fps()
@@ -68,33 +69,39 @@ class GameStateManager:
         Runs the game. Ends when the user dies
         """
         while self.game_snake.is_alive:
-            if self.FPS_controller.should_update_graphics_and_movement():
+            if self.fps_controller.should_update_graphics_and_movement():
                 WINDOW.fill(GAME_LOOP_BG_COLOR)
 
                 ### Scanning Events for Key Inputs
                 self.game_loop_event_handler.record_input()
-                snake_direction_tuple = self.game_loop_event_handler.direction_key_pressed().value
-                if snake_direction_tuple is not None:
-                    self.game_snake.change_dir(snake_direction_tuple)
+                snake_direction = self.game_loop_event_handler.direction_key_pressed()
+                if snake_direction is not None:
+                    snake_direction_tuple = snake_direction.value
+                    print(snake_direction_tuple)
+                    self.game_snake.change_direction(snake_direction_tuple)
                     
-                self.game_snake.__move_snake_forward_by_one() #Moves adds 1 column or row to the grid pos depending on the pieces' current directions 
+                self.game_snake.move_forward_by_one() #Moves adds 1 column or row to the grid pos depending on the pieces' current directions 
                 self.game_snake.check_for_fatal_collisions()
+                ## Exiting loop when snake dies from collisions so snake display doesn't cause errors 
+                if not self.game_snake.is_alive:
+                    return 
                 
                 if self.game_snake.is_colliding_with_given_apple(self.game_apple):
                     self.game_apple.relocate()
                     self.snake.add_piece()
                     updated_score_msg = (
-                    "Score " + str(len(self.game_snake.total_length) - self.game_snake.starting_length)
+                    "Score " + str(self.game_snake.total_length - self.game_snake.starting_length)
                     ) 
                     self.game_score_text_surface.change_text(updated_score_msg)
                      
                 self.game_snake.display(WINDOW)
+                self.game_apple.display(WINDOW)
                 self.game_score_text_surface.display(WINDOW)
-                self.game.display(WINDOW)
+                
 
                 pygame.display.flip()
 
-            self.FPS_controller.limit_fps()
+            self.fps_controller.limit_fps()
     
     def game_over_loop(self):
 
