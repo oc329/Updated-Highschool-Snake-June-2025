@@ -22,7 +22,14 @@ class Apple:
         self.width = int(CELL_SIZE[0]) #Sets apple's size equal to size of one block in game grid
         self.height = int(CELL_SIZE[1]) 
         
-        unscaled_image = pygame.image.load('apple_test2.png').convert() # Relative file path that loads properly because os code correct cwd
+        # Get the directory of the current script
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct a path relative to the script
+        apple_img_relative_file_path = os.path.join(BASE_DIR, 'Assets', 'Sprites', 'Apple', 'apple_test2.png')
+
+        # Load and convert the image (no alpha)
+        unscaled_image = pygame.image.load(apple_img_relative_file_path).convert()
         unscaled_image.set_colorkey(WHITE) #Sets the white to transparent
         self.loaded_img = pygame.transform.scale(unscaled_image, (self.width, self.height)) ## scales the image to the size of a cell in the grid
     

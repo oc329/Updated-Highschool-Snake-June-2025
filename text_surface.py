@@ -50,10 +50,11 @@ class BaseTextSurface(ABC):
         self.text = text
         self.text_renderer = text_renderer
         self.pos_anchor = pos_anchor
-        self.display_pos = display_pos
-
+        self.anchor_pos = display_pos
+        self.display_pos = self.anchor_pos
+        
         self._render_current_text()
-        self._calculate_display_pos_based_on_anchor()
+        self._set_display_pos_based_on_anchor()
     
     
     def change_display_pos(self, new_display_pos: tuple[int, int]):
@@ -72,32 +73,36 @@ class BaseTextSurface(ABC):
         if new_pos_anchor not in ('start', 'middle', 'end'):
             raise ValueError("anchor must be 'start', 'middle', or 'end'")
         self.pos_anchor = new_pos_anchor
-        self._calculate_display_pos_based_on_anchor()
+        self._set_display_pos_based_on_anchor()
 
-    def _calculate_display_pos_based_on_anchor(self):
+    def _set_display_pos_based_on_anchor(self):
         """
         Calculates and sets the display position based on the anchor attribute ('start', 'middle', 'end')
         """ 
+        
         if self.pos_anchor == 'middle':
-            self._calculate_display_pos_from_middle(self.display_pos)
+            new_display_pos = self._calculate_display_pos_from_middle(self.anchor_pos)
         elif self.pos_anchor == 'end':
-            self._calculate_display_pos_from_end(self.display_pos)
+            new_display_pos = self._calculate_display_pos_from_end(self.anchor_pos)
 
-        ensure_pos_is_on_screen(self.display_pos)
+        self.change_display_pos(new_display_pos)
 
     def _calculate_display_pos_from_middle(self, middle_pos: str):
         """
-        Sets the display pos from the given middle position
+        Calculates the display pos based on the given middle position. 
+        Returns the display position.
         """
         half_text_width = self.get_width() // 2
-        self.display_pos = (middle_pos[0] - half_text_width, middle_pos[1])
+        pos_calculated_from_middle = (middle_pos[0] - half_text_width, middle_pos[1])
+        return pos_calculated_from_middle
 
     def _calculate_display_pos_from_end(self, end_pos: str):
         """
-        Sets the display position from the end.
+        Calculates and returns the display position calculated from the given end position.
         (End position - the text surface width).
         """
-        self.display_pos = (end_pos[0] - self.get_width(), end_pos[1])
+        pos_calculated_from_end = (end_pos[0] - self.get_width(), end_pos[1])
+        return pos_calculated_from_end
 
 
     def get_width(self):
@@ -151,8 +156,8 @@ class MultiLineTextSurface(BaseTextSurface):
 
     def _calculate_display_pos_from_middle(self, middle_pos: tuple[int, int]):
         """
-        Calculates the display pos based on the passed middle pos. 
-        Centers the text horizontally and vertically 
+        Calculates and returns the display pos based on the passed middle pos.
+        Display positions is centered on the text horizontally and vertically 
         """
         half_text_width = self.get_width() // 2
         half_text_height = self.get_height() // 2
@@ -191,7 +196,7 @@ class EditableTextSurfaceMixin:
         """
         self.text = new_text
         self._render_current_text()
-        self._calculate_display_pos_based_on_anchor()
+        self._set_display_pos_based_on_anchor()
 
     def change_pos(self, new_pos: tuple[int, int]):
         """
@@ -200,8 +205,8 @@ class EditableTextSurfaceMixin:
         Parameters:
             - (tuple[int, int]) new_pos: The x, y display position of the text based on position anchor
         """
-        self.display_pos = new_pos
-        self._calculate_display_pos_based_on_anchor()
+        self.anchor_pos = new_pos
+        self._set_display_pos_based_on_anchor()
     
     def change_text_and_pos(self, new_text: str, new_pos: tuple[int, int]):
         self.change_pos(new_pos)
@@ -213,7 +218,7 @@ class EditableTextSurfaceMixin:
         and updates the position in case the middle of the text has changed
         """
         self._render_current_text()
-        self._calculate_display_pos_based_on_anchor(self.display_pos)
+        self._set_display_pos_based_on_anchor()
  
 
 class EditableSingleLineTextSurface(SingleLineTextSurface, EditableTextSurfaceMixin):
@@ -253,7 +258,7 @@ class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixi
     def remove_last_line(self): 
         self.texts.pop()
         self.rendered_texts.pop()
-        self._calculate_display_pos_based_on_anchor()
+        self._set_display_pos_based_on_anchor()
 
     def _rerender_last_line(self):
         """
@@ -261,7 +266,7 @@ class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixi
         and updates the position in case the middle of the text has changed
         """
         self.rendered_texts[-1] = self.text_renderer.render(self.texts[-1])
-        self._calculate_display_pos_based_on_anchor()
+        self._set_display_pos_based_on_anchor()
     
     def _add_new_line_and_char(self, char: str):
         """
@@ -269,7 +274,7 @@ class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixi
         """
         self.texts.append(char)
         self.rendered_texts.append(self.text_renderer.render(self.texts[-1]))
-        self._calculate_display_pos_based_on_anchor()
+        self._set_display_pos_based_on_anchor()
     
     def add_char(self, char: str):
         """
