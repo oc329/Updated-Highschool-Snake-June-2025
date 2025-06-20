@@ -64,13 +64,19 @@ class Snake():
     def change_direction(self, new_direction: tuple[int, int]):
         """
         Direction should represent the column and row change. 
-        It should be(1, 0) or (0, 1)
+        It should be (1, 0), (-1, 0), (0, -1), (0, 1)
         """
         if not isinstance(new_direction, tuple): 
             return ValueError("Should be tuple")
         if new_direction not in self.acceptable_directions:
             raise ValueError(f"Direction {new_direction} should be one of these: {self.acceptable_directions}")
         
+        old_direction_x, old_direction_y = self.direction
+        new_direction_x, new_direction_y = new_direction
+        
+        ## Not changing direction if it's the same or in the opposite dir (not possible in snake)
+        if old_direction_x == abs(new_direction_x) or old_direction_y == abs(new_direction_y):
+            return
         self.direction = new_direction
                 
     def is_colliding_with_wall(self):

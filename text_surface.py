@@ -1,7 +1,8 @@
 from abc import ABC
 from itertools import batched
-import pygame
 from pygame.font import Font
+import pygame
+
 from math import ceil
 
 from colors import WHITE
@@ -268,7 +269,7 @@ class EditableMultiLineTextSurface(MultiLineTextSurface, EditableTextSurfaceMixi
         """
         self.texts.append(char)
         self.rendered_texts.append(self.text_renderer.render(self.texts[-1]))
-        self._calculate_display_pos_based_on_anchor()()
+        self._calculate_display_pos_based_on_anchor()
     
     def add_char(self, char: str):
         """

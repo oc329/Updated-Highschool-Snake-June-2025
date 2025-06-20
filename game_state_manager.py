@@ -88,7 +88,7 @@ class GameStateManager:
                 
                 if self.game_snake.is_colliding_with_given_apple(self.game_apple):
                     self.game_apple.relocate()
-                    self.snake.add_piece()
+                    self.game_snake.add_end_segment()
                     updated_score_msg = (
                     "Score " + str(self.game_snake.total_length - self.game_snake.starting_length)
                     ) 

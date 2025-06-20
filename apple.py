@@ -4,6 +4,7 @@ pygame.init()
 import os
 import random #To relocate the apple
 
+from colors import WHITE
 from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMNS, TOTAL_ROWS
 # from object import Object
 
@@ -21,7 +22,8 @@ class Apple:
         self.width = int(CELL_SIZE[0]) #Sets apple's size equal to size of one block in game grid
         self.height = int(CELL_SIZE[1]) 
         
-        unscaled_image = pygame.image.load('apple_test2.png') # Relative file path that loads properly because os code correct cwd
+        unscaled_image = pygame.image.load('apple_test2.png').convert() # Relative file path that loads properly because os code correct cwd
+        unscaled_image.set_colorkey(WHITE) #Sets the white to transparent
         self.loaded_img = pygame.transform.scale(unscaled_image, (self.width, self.height)) ## scales the image to the size of a cell in the grid
     
     
@@ -47,7 +49,7 @@ class Apple:
         ## Getting Random Column and Row number
         #Places the apple at a random set of coors within the screen dimensions
         random_grid_pos = self.__get_random_grid_pos()
-        self.grid_pos = self.change_grid_pos(random_grid_pos)
+        self.change_grid_pos(random_grid_pos)
 
     def display(self, win: pygame.surface.Surface):
         win.blit(self.loaded_img, self.dipslay_pos)
