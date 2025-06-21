@@ -1,10 +1,10 @@
 import pygame
 pygame.init() 
 
-import os
 import random #To relocate the apple
 
 from colors import WHITE
+from file_paths import apple_img_absolute_file_path
 from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMNS, TOTAL_ROWS
 # from object import Object
 
@@ -23,13 +23,9 @@ class Apple:
         self.height = int(CELL_SIZE[1]) 
         
         # Get the directory of the current script
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-        # Construct a path relative to the script
-        apple_img_relative_file_path = os.path.join(BASE_DIR, 'Assets', 'Sprites', 'Apple', 'apple_test2.png')
-
+        print(os.path.exists(apple_img_absolute_file_path))
         # Load and convert the image (no alpha)
-        unscaled_image = pygame.image.load(apple_img_relative_file_path).convert()
+        unscaled_image = pygame.image.load(apple_img_absolute_file_path).convert()
         unscaled_image.set_colorkey(WHITE) #Sets the white to transparent
         self.loaded_img = pygame.transform.scale(unscaled_image, (self.width, self.height)) ## scales the image to the size of a cell in the grid
     

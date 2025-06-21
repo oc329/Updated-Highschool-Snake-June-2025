@@ -1,14 +1,21 @@
 from abc import ABC
+from os import path
 from pygame.font import Font, SysFont 
 from pygame.surface import Surface
 from pygame import SRCALPHA
 from collections.abc import Iterable
+
+
 from colors import GAME_OVER_MSG_FONT_COLOR, GAME_SCORE_FONT_COLOR, MENU_BOX_DEFAULT_FONT_COLOR, MENU_BOX_DEFAULT_FONT_COLOR, MENU_BOX_HIGHLIGHTED_FONT_COLOR, MENU_TITLE_FONT_COLOR, RAINBOW_SNAKE_COLORS
+from file_paths import emulogic_absolute_file_path
 from screen_info import GAME_OVER_MSG_FONT_SIZE, GAME_SCORE_FONT_SIZE, MENU_BOX_DEFAULT_FONT_SIZE, MENU_TITLE_FONT_SIZE
 
+
+
+
 GAME_SCORE_FONT = SysFont("freemono", GAME_SCORE_FONT_SIZE)
-GAME_OVER_MSG_FONT = Font("Emulogic.ttf", GAME_OVER_MSG_FONT_SIZE)
-MENU_TITLE_FONT = Font("Emulogic.ttf", MENU_TITLE_FONT_SIZE)
+GAME_OVER_MSG_FONT = Font(emulogic_absolute_file_path, GAME_OVER_MSG_FONT_SIZE)
+MENU_TITLE_FONT = Font(emulogic_absolute_file_path, MENU_TITLE_FONT_SIZE)
 MENU_BOX_FONT = SysFont("freemono", MENU_BOX_DEFAULT_FONT_SIZE)
 
 from dataclasses import dataclass
