@@ -22,9 +22,6 @@ class Apple:
         self.width = int(CELL_SIZE[0]) #Sets apple's size equal to size of one block in game grid
         self.height = int(CELL_SIZE[1]) 
         
-        # Get the directory of the current script
-        print(os.path.exists(apple_img_absolute_file_path))
-        # Load and convert the image (no alpha)
         unscaled_image = pygame.image.load(apple_img_absolute_file_path).convert()
         unscaled_image.set_colorkey(WHITE) #Sets the white to transparent
         self.loaded_img = pygame.transform.scale(unscaled_image, (self.width, self.height)) ## scales the image to the size of a cell in the grid
