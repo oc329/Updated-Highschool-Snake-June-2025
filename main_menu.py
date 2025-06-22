@@ -34,7 +34,7 @@ class Menu:
         
         self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS)
         self.screen_settings_page = ScreenSettingsPage(self, (0,0), SCREEN_SIZE)
-        self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, BOTTOM_RIGHT_FIFTH_OF_SCREEN)
+        self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, SCREEN_SIZE)
         
         self.active_page = self.main_menu_page
         
@@ -46,11 +46,12 @@ class Menu:
                     PageName.SNAKE_SKIN_SETTINGS :{
                         "Page": self.snake_colors_settings_page, 
                         "Children": {}
-                    }
-                },
-                PageName.SCREEN_SETTINGS: {
+                    },
+                    PageName.SCREEN_SETTINGS: {
                         "Page": self.screen_settings_page, 
                         "Children" : {}
+                    },
+                
                 }
             }
         }

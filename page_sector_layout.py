@@ -84,10 +84,11 @@ class VerticalSectorLayoutManager(AbstractSectorLayoutManager):
         if self.sector_pos_anchor == VerticalSectorPosAnchor.LEFT:
             menu_box_x = self.top_left_pos[0]
         elif self.sector_pos_anchor == VerticalSectorPosAnchor.MIDDLE:
-            half_of_sector_width = self.top_left_pos[0] + (self.top_left_pos[0] - self.bottom_right_pos[0]) // 2
+            ## y is in 4th quad so y increases as you go lower
+            half_of_sector_width = self.top_left_pos[0] + (self.bottom_right_pos[0] - self.top_left_pos[0]) // 2
             menu_box_x = half_of_sector_width
         elif self.sector_pos_anchor == VerticalSectorPosAnchor.RIGHT:
-            sector_width = self.top_left_pos[0] + (self.top_left_pos[0] - self.bottom_right_pos[0])
+            sector_width = self.top_left_pos[0] + (self.bottom_right_pos[0] - self.top_left_pos[0])
             menu_box_x = sector_width
         else: 
             raise ValueError("Given Vertical Sector Anchor Position isn't valid")
@@ -102,7 +103,7 @@ class VerticalSectorLayoutManager(AbstractSectorLayoutManager):
         bottom_y, top_y = self.bottom_right_pos[1], self.top_left_pos[1]
         display_interval = (bottom_y - top_y) // len(boxes)
         menu_box_x = self.get_menu_box_x()
-
+        print(f"top left pos {self.top_left_pos}")
         for box_i, box in enumerate(boxes):
             box.change_pos_anchor(self.box_pos_anchor)
             pos = (menu_box_x, top_y + display_interval * box_i)

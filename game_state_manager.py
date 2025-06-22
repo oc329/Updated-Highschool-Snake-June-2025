@@ -4,6 +4,7 @@ import time
 
 from apple import Apple
 from colors import GAME_LOOP_BG_COLOR, MAIN_MENU_BG_COLOR
+from enums import TextSurfacePosAnchor
 from event_handler import GameLoopEventHandler, MainMenuEventHamdler
 from main_menu import Menu
 from screen_info import CENTER_OF_SCREEN, SCREEN_WIDTH, GAME_SNAKE_STARTING_GRID_POS, WINDOW
@@ -27,10 +28,10 @@ class GameStateManager:
 
         game_score_msg = "Score 0"
         game_score_pos = (SCREEN_WIDTH, 0)
-        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_RENDERER, 'end')
+        self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_RENDERER, TextSurfacePosAnchor.END)
         
         GAME_OVER_MSG = "GAME OVER"
-        self.game_over_text_surface = SingleLineTextSurface(GAME_OVER_MSG, CENTER_OF_SCREEN, GAME_OVER_MSG_TEXT_RENDERER, 'middle')
+        self.game_over_text_surface = SingleLineTextSurface(GAME_OVER_MSG, CENTER_OF_SCREEN, GAME_OVER_MSG_TEXT_RENDERER, TextSurfacePosAnchor.MIDDLE)
         self.menu = Menu(self.game_snake) #Takes in pygame window, game_snake and title screen message
 
     def run(self):

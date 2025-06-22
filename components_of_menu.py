@@ -75,7 +75,7 @@ class PageWithBoxesCompactedIntoSector(Page):
 	Subclass of Page. Has methods and functionality to display 
 	the menu boxes into a vertical list between the passed start and end pos. 
 	"""
-	def __init__(self, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = "middle",
+	def __init__(self, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = TextSurfacePosAnchor.MIDDLE,
 			  sector_pos_anchor: AbstractSectorPosAnchor = VerticalSectorPosAnchor.MIDDLE, sector_type = SectorType.VERTICAL): 
 		
 		self.layout_manager = self._get_layout_manager_based_on_type(top_left_pos, bottom_right_pos, sector_type, sector_pos_anchor, box_pos_anchor)
@@ -100,24 +100,25 @@ class PageWithBoxesCompactedIntoSector(Page):
 		return layout_manager
 	
 class MainMenuPage(PageWithBoxesCompactedIntoSector):
-	def __init__(self, game_title: str, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = "middle"):
+	def __init__(self, game_title: str, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = TextSurfacePosAnchor.MIDDLE):
 		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
 		self.GAME_TITLE = game_title
 		y_space_btw_main_menu_title_and_first_box = SCREEN_HEIGHT // 16
 		title_pos = (CENTER_OF_SCREEN[0], top_left_pos[1] - y_space_btw_main_menu_title_and_first_box)
-		self.title_text_surface = SingleLineTextSurface(game_title, MIDDLE_TOP_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_anchor = "middle")
+		self.title_text_surface = SingleLineTextSurface(game_title, MIDDLE_TOP_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_anchor = TextSurfacePosAnchor.MIDDLE)
 		self.ensure_sector_does_not_overlap_with_title()
 
 	def ensure_sector_does_not_overlap_with_title(self):
 		"""
 		Raises a value Error if the title is within the page's sector
 		"""
-		title_x, title_y = self.title_text_surface.display_pos
+		title_x = self.title_text_surface.display_pos[0] 
+		bottom_of_title_y = self.title_text_surface.display_pos[1] + self.title_text_surface.get_height()
 		sector_top_left_pos = self.layout_manager.top_left_pos
 		sector_bottom_right_pos = self.layout_manager.bottom_right_pos
-		if not(sector_top_left_pos[0] < title_x < sector_bottom_right_pos[0] and sector_top_left_pos[1] < title_y < sector_bottom_right_pos[1]):
+		if sector_top_left_pos[1] < bottom_of_title_y < sector_bottom_right_pos[1]:
 			raise ValueError(f"Title shouldn't overlap with page sector.\n"
-					f"Title Pos: {(title_x, title_y)}\n"
+					f"Title Pos: {(title_x, bottom_of_title_y)}\n"
 					f"Top Left Pos: {sector_top_left_pos}\n"
 					f"Bottom Right Pos: {sector_bottom_right_pos}"
 					)
@@ -158,7 +159,7 @@ class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 		
 		## Adding Rainbow Menu Box
 		rainbow_text = "RAINBOW"
-		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, CENTER_OF_SCREEN, "RAINBOW", RAINBOW_MENU_BOX_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER)
+		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, rainbow_text, RAINBOW_MENU_BOX_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER)
 		self.menu_boxes.append(rainbow_color_menu_box)
 
 
@@ -167,8 +168,10 @@ class ScreenSettingsPage(PageWithBoxesCompactedIntoSector):
 		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
 
 	def create_boxes(self):
-		dummy_box = SettingsMenuBox([], CENTER_OF_SCREEN, self, self.menu_box_dummy_pos, "CENTER OF SCREEN", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER)
-		self.menu_boxes.append(dummy_box)
+		test_box_text = "CENTER OF SCREEN"
+		blank_holder_value = []
+		test_box = SettingsMenuBox(blank_holder_value, CENTER_OF_SCREEN, self, test_box_text, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER)
+		self.menu_boxes.append(test_box)
 
 class BaseMenuBox(HighlightableEditableSingleLineTextSurface):
 	DUMMY_POS = CENTER_OF_SCREEN
@@ -229,7 +232,7 @@ class SettingsMenuBox(BaseMenuBox):
 	to the new_data_for_variable both passed in constructor
 	"""
 	def __init__(self, mutable_variable_to_change_on_click, new_data_for_variable, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
-		super().__init__(page, display_pos, text, default_text_renderer, highlighted_text_renderer, pos_anchor)
+		super().__init__(page, text, default_text_renderer, highlighted_text_renderer, display_pos, pos_anchor)
 		self.variable_to_change = mutable_variable_to_change_on_click
 		self.new_data_for_variable = new_data_for_variable
 	
@@ -248,7 +251,7 @@ class SettingsMenuBoxLambdaTry(BaseMenuBox):
 	to the new_data_for_variable both passed in constructor
 	"""
 	def __init__(self, lambda_on_click_func, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
-		super().__init__(page, display_pos, text, default_text_renderer, highlighted_text_renderer, pos_anchor)
+		super().__init__(page, text, default_text_renderer, highlighted_text_renderer, display_pos, pos_anchor)
 		self.on_click_fun = lambda_on_click_func
 	
 	def on_click(self):

@@ -71,22 +71,27 @@ class BaseTextSurface(ABC):
         updates the display position accordingly.
         Raises an error if the position anchor isn't 'start', 'middle' or 'end'
         """
-        possible_values = [pos_anchor.value for pos_anchor in TextSurfacePosAnchor]
+        possible_values = [pos_anchor for pos_anchor in TextSurfacePosAnchor]
         if new_pos_anchor not in possible_values:
-            raise ValueError(f"Anchor should be {possible_values}")
+            raise ValueError(f"Given is {new_pos_anchor}. Anchor should be {possible_values}")
         self.pos_anchor = new_pos_anchor
         self._set_display_pos_based_on_anchor()
 
     def _set_display_pos_based_on_anchor(self):
         """
-        Calculates and sets the display position based on the anchor attribute ('start', 'middle', 'end')
+        Calculates and sets the display position based on the TextSurface Position Anchor Enum (START, MIDDLE, END)
         """ 
+        ## Does nothing if position is at the start of the box since that's the default
+        if self.pos_anchor == TextSurfacePosAnchor.START:
+            return
         
-        if self.pos_anchor == 'middle':
+        if self.pos_anchor == TextSurfacePosAnchor.MIDDLE:
             new_display_pos = self._calculate_display_pos_from_middle(self.anchor_pos)
-        elif self.pos_anchor == 'end':
+        elif self.pos_anchor == TextSurfacePosAnchor.END:
             new_display_pos = self._calculate_display_pos_from_end(self.anchor_pos)
-
+        else:
+            raise ValueError("Anchor Position not valid.\n"
+                            f"Pos anchor: {self.pos_anchor}")
         self.change_display_pos(new_display_pos)
 
     def _calculate_display_pos_from_middle(self, middle_pos: str):
