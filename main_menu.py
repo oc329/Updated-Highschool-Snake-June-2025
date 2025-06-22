@@ -12,13 +12,13 @@ pygame.init()
 from colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
 from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, SnakeSkinsSettingsPage
 from enums import PageName
-from screen_info import BOTTOM_MIDDLE_FIFTH_OF_SCREEN, CENTER_OF_SCREEN, MAIN_MENU_PAGE_END_POS, MAIN_MENU_PAGE_STARTING_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, SCREEN_HEIGHT, TOTAL_COLUMNS, TOP_MIDDLE_FIFTH_OF_SCREEN
+from screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN
 from text_surface import HighlightableEditableSingleLineTextSurface
 from snake import Snake 
 
 
 class Menu: 
-    def __init__ (self, game_snake):
+    def __init__ (self, game_snake: Snake):
         self.is_running = True
         self.game_snake = game_snake
         self.menu_snake = Snake(MAIN_MENU_SNAKE_STARTING_GRID_POS)
@@ -32,9 +32,9 @@ class Menu:
         
         ## Determines the home page's y distance from title
         
-        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, MAIN_MENU_PAGE_STARTING_POS, MAIN_MENU_PAGE_END_POS)
-        self.screen_settings_page = ScreenSettingsPage(self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
-        self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_MIDDLE_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_FIFTH_OF_SCREEN)
+        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS)
+        self.screen_settings_page = ScreenSettingsPage(self, (0,0), SCREEN_SIZE)
+        self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, BOTTOM_RIGHT_FIFTH_OF_SCREEN)
         
         self.active_page = self.main_menu_page
         
@@ -88,15 +88,6 @@ class Menu:
         self.active_page = new_page
         self.selected_box = new_page.menu_boxes[0]
         self.highlight_selected_box() 
-            
-
-            # ## Brute Forcing Snake Relocation to correct spot when user opens open page or colors pages
-            # if(new_page == self.colors_page):
-            # 	self.relocate_menu_snake(MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_COLORS_PAGE)
-            # 	## Teleports snake to right side of screen so player can see the different colors on snake 
-            # elif(new_page == self.home_page):
-            # 	self.relocate_menu_snake(GRID_POS_TO_DISPLAY_POS)
-            # 	## Teleports snake to bottom of screen to do snake animation
 
     def change_to_outer_page(self):
         """
@@ -144,15 +135,15 @@ class Menu:
 
     ### For Color Boxes
     def change_snake_color(self, new_color):
-        self.menu_snake.change_all_colors(new_color)
+        self.menu_snake.change_color(new_color)
         
     ### For the Play Box
     def start_game(self):
         """
-        Ends the Menu loop and starts the game
+        Ends the Menu loop and starts the game. Changes the game snake colors to the menu snake 
         """
         self.is_running = False
-        self.menu_snake
+        self.game_snake.change_color(self.menu_snake.color)
 
     def unhighlight_selected_box(self):
         """

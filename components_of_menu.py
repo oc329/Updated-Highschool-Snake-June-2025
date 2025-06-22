@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 pygame.init()
 
 from colors import ARROW_COLOR, RAINBOW_SNAKE_COLORS
-from enums import PageName
+from enums import AbstractSectorPosAnchor, HorizontalSectorPosAnchor, PageName, SectorType, TextSurfacePosAnchor, VerticalSectorPosAnchor
 from event_handler import quit_program
+from page_sector_layout import AbstractSectorLayoutManager, HorizontalSectorLayoutManager, VerticalSectorLayoutManager
 from screen_info import ARROW_SIZE, CENTER_OF_SCREEN, MIDDLE_TOP_OF_SCREEN, SCREEN_HEIGHT, SCREEN_WIDTH
 from snake import Snake
 from text_settings import BaseTextRenderer, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, MENU_BOX_TEXT_SETTINGS, MENU_TITLE_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER, TextRendererWithSingleColor
@@ -28,6 +29,8 @@ class Page(ABC):
 		self.menu_boxes: list[HighlightableEditableSingleLineTextSurface] = []
 		self.highlighted_menu_box_text_renderer = MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER
 
+		self.selected_box_index: int = 0
+
 		self.create_boxes()
 
 	def create_boxes(self):
@@ -48,76 +51,87 @@ class Page(ABC):
 		Sets this page's outerpage
 		"""
 		self.outer_page = outer_page
-
+	
+	@property
+	def selected_box(self):
+		"""
+		Returns the current selected box
+		"""
+		## Raises an error if there are no menu boxes 
+		if not self.menu_boxes:
+			raise IndexError("Page has no menu boxes; cannot select a box.")
+		
+		return self.menu_boxes[self.selected_box_index]
+	
 	def display(self, win: pygame.surface.Surface):
 		"""
 		Displays all the Game Title and all Menu boxes 
 		"""
 		for menu_box in self.menu_boxes: 
 			menu_box.display(win)
+
 class PageWithBoxesCompactedIntoSector(Page):
 	"""
 	Subclass of Page. Has methods and functionality to display 
 	the menu boxes into a vertical list between the passed start and end pos. 
-
 	"""
-	def __init__(self, menu: 'Menu', top_of_sector_pos: tuple[int, int], bottom_of_sector_pos: tuple[int, int], pos_anchor = "middle"): 
-		## These attributes need to be before parent init since they're used in create_boxes method
-		self.menu_box_dummy_pos = CENTER_OF_SCREEN
-		self.pos_anchor = pos_anchor
+	def __init__(self, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = "middle",
+			  sector_pos_anchor: AbstractSectorPosAnchor = VerticalSectorPosAnchor.MIDDLE, sector_type = SectorType.VERTICAL): 
+		
+		self.layout_manager = self._get_layout_manager_based_on_type(top_left_pos, bottom_right_pos, sector_type, sector_pos_anchor, box_pos_anchor)
+		self.box_pos_anchor = box_pos_anchor
 		super().__init__(menu)
-		self.longest_message_length: int | None = None
-		self.top_of_sector_pos = top_of_sector_pos
-		self.bottom_of_sector_pos = bottom_of_sector_pos
+		## Needs to after Page super so page can create boxes
+		self.layout_manager.position_boxes(self.menu_boxes)
 
-		self.box_display_interval = self._calculate_box_display_interval()
-
-		self.move_boxes_into_sector()
-		
-	def _calculate_box_display_interval(self) -> int:
+	def _get_layout_manager_based_on_type(self, top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], 
+									   sector_type: AbstractSectorLayoutManager, sector_pos_anchor: AbstractSectorPosAnchor, box_pos_anchor: TextSurfacePosAnchor):
 		"""
-		Calculates the interval at which to display each box inside the sector.
-		Is based on the number of boxes and the top and bottom pos
-		
-		Returns: 
-			- (int) display_interval: An int representing the inteerval at which to display each box
+		Based on the given Sector Type enum. 
+		Returns the corresponding SectorLayoutManager object
 		"""
-		## Bottom subtracts from top since it's 4th quad graphics
-		sector_height = self.bottom_of_sector_pos[1] - self.top_of_sector_pos[1]
-		num_boxes = len(self.menu_boxes)
-		return sector_height // num_boxes
+		if sector_type is SectorType.VERTICAL: 
+			layout_manager = VerticalSectorLayoutManager(top_left_pos, bottom_right_pos, sector_pos_anchor, box_pos_anchor)
+		elif sector_type is SectorType.HORIZONTAL: 
+			layout_manager = HorizontalSectorLayoutManager(top_left_pos, bottom_right_pos, sector_pos_anchor, box_pos_anchor)
+		else:
+			raise ValueError("Sector type should be a valid SectorType Enum")
+		
+		return layout_manager
 	
-	def move_boxes_into_sector(self):
-		"""
-		Moves the boxes into the page sector with equal spacing btw each one.
-		(sector = space btw top and bottom sector pos) 
-		
-		"""
-		for menu_box_i, menu_box in enumerate(self.menu_boxes):
-			menu_box.change_pos_anchor(self.pos_anchor)
-			y_coor = self.top_of_sector_pos[1] + self.box_display_interval * menu_box_i
-			menu_box_display_pos = (self.top_of_sector_pos[0], y_coor)
-			menu_box.change_pos(menu_box_display_pos)
-
 class MainMenuPage(PageWithBoxesCompactedIntoSector):
-	def __init__(self, game_title: str, menu: 'Menu', top_of_sector_pos: tuple[int, int], bottom_of_sector_pos: tuple[int, int], pos_anchor = "middle"):
-		super().__init__(menu, top_of_sector_pos, bottom_of_sector_pos, pos_anchor)
-		self.y_space_btw_main_menu_title_and_first_box = SCREEN_HEIGHT // 16
+	def __init__(self, game_title: str, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = "middle"):
+		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
 		self.GAME_TITLE = game_title
-		title_pos = (top_of_sector_pos[0], bottom_of_sector_pos[1] - self.y_space_btw_main_menu_title_and_first_box)
-		self.title_text_surface: SingleLineTextSurface = SingleLineTextSurface(game_title, MIDDLE_TOP_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_anchor = "middle")
+		y_space_btw_main_menu_title_and_first_box = SCREEN_HEIGHT // 16
+		title_pos = (CENTER_OF_SCREEN[0], top_left_pos[1] - y_space_btw_main_menu_title_and_first_box)
+		self.title_text_surface = SingleLineTextSurface(game_title, MIDDLE_TOP_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_anchor = "middle")
+		self.ensure_sector_does_not_overlap_with_title()
 
+	def ensure_sector_does_not_overlap_with_title(self):
+		"""
+		Raises a value Error if the title is within the page's sector
+		"""
+		title_x, title_y = self.title_text_surface.display_pos
+		sector_top_left_pos = self.layout_manager.top_left_pos
+		sector_bottom_right_pos = self.layout_manager.bottom_right_pos
+		if not(sector_top_left_pos[0] < title_x < sector_bottom_right_pos[0] and sector_top_left_pos[1] < title_y < sector_bottom_right_pos[1]):
+			raise ValueError(f"Title shouldn't overlap with page sector.\n"
+					f"Title Pos: {(title_x, title_y)}\n"
+					f"Top Left Pos: {sector_top_left_pos}\n"
+					f"Bottom Right Pos: {sector_bottom_right_pos}"
+					)
+		
 	### Settings Page Boxes
 	def create_boxes(self):
 		"""
 		Creates all the menu boxes for the pages. 
 		Feeds them dummy positions to be corrected later.
 		"""
-		dummy_pos = self.menu_box_dummy_pos
-		self.play_box = PlayMenuBox(self, CENTER_OF_SCREEN, "Play", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, self.pos_anchor)
-		self.color_page_transition_box = TransitionMenuBox(PageName.SNAKE_SKIN_SETTINGS, self, CENTER_OF_SCREEN, "SNAKE COLORS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, self.pos_anchor)
-		self.screen_page_transition_box = TransitionMenuBox(PageName.SCREEN_SETTINGS, self, CENTER_OF_SCREEN, "SCREEN DIMENSIONS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, self.pos_anchor)
-		self.quit_box = QuitProgramMenuBox(self, CENTER_OF_SCREEN, "QUIT", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, self.pos_anchor)
+		self.play_box = PlayMenuBox(self, "Play", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		self.color_page_transition_box = TransitionMenuBox(PageName.SNAKE_SKIN_SETTINGS, self, "SNAKE COLORS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		self.screen_page_transition_box = TransitionMenuBox(PageName.SCREEN_SETTINGS, self, "SCREEN DIMENSIONS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		self.quit_box = QuitProgramMenuBox(self, "QUIT", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
 		self.menu_boxes = [self.play_box, self.color_page_transition_box, self.screen_page_transition_box, self.quit_box]
 
 	def display(self, win: pygame.surface.Surface):
@@ -129,10 +143,10 @@ class MainMenuPage(PageWithBoxesCompactedIntoSector):
 		self.title_text_surface.display(win)
 
 class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
-	def __init__(self, colors: dict[str : tuple[int, int, int]], snake_to_edit: Snake, menu: 'Menu', top_of_sector_pos: tuple[int, int], bottom_of_sector_pos: tuple[int, int], pos_anchor: str = "middle"):
+	def __init__(self, colors: dict[str : tuple[int, int, int]], snake_to_edit: Snake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		self.colors = colors
 		self.snake_to_edit = snake_to_edit
-		super().__init__(menu, top_of_sector_pos, bottom_of_sector_pos, pos_anchor)
+		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
 		
 		
 	def create_boxes(self):
@@ -140,7 +154,7 @@ class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 			text = color_name
 			default_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
 			highlighted_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
-			self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, CENTER_OF_SCREEN, text, default_text_renderer, default_text_renderer))
+			self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, text, default_text_renderer, default_text_renderer))
 		
 		## Adding Rainbow Menu Box
 		rainbow_text = "RAINBOW"
@@ -149,13 +163,19 @@ class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 
 
 class ScreenSettingsPage(PageWithBoxesCompactedIntoSector):
-	
+	def __init__(self,  menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
+		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
+
 	def create_boxes(self):
 		dummy_box = SettingsMenuBox([], CENTER_OF_SCREEN, self, self.menu_box_dummy_pos, "CENTER OF SCREEN", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER)
 		self.menu_boxes.append(dummy_box)
 
 class BaseMenuBox(HighlightableEditableSingleLineTextSurface):
-	def __init__(self, page: Page, display_pos: tuple[int, int], text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, pos_anchor: str = "middle"):
+	DUMMY_POS = CENTER_OF_SCREEN
+
+	def __init__(self, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer,display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
+		if display_pos is None:
+			display_pos = BaseMenuBox.DUMMY_POS
 		super().__init__(text, display_pos, default_text_renderer, highlighted_text_renderer, pos_anchor)
 		self.page = page
 
@@ -171,8 +191,8 @@ class TransitionMenuBox(BaseMenuBox):
 	Subclass of MenuBox.
 	Transitions to another page when iteracted with.
 	"""
-	def __init__(self, target_page_name: Page, page: Page, display_pos: tuple[int, int], text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, pos_anchor: str = "middle"):
-		super().__init__(page, display_pos, text, default_text_renderer, highlighted_text_renderer, pos_anchor)
+	def __init__(self, target_page_name: Page, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
+		super().__init__(page, text, default_text_renderer, highlighted_text_renderer, display_pos, pos_anchor)
 		self.target_page_name = target_page_name
 
 	def on_click(self):
@@ -208,7 +228,7 @@ class SettingsMenuBox(BaseMenuBox):
 	When clicked, it will the change the variable_to_change_on_click 
 	to the new_data_for_variable both passed in constructor
 	"""
-	def __init__(self, mutable_variable_to_change_on_click, new_data_for_variable, page: Page, display_pos: tuple[int, int], text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, pos_anchor: str = "middle"):
+	def __init__(self, mutable_variable_to_change_on_click, new_data_for_variable, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		super().__init__(page, display_pos, text, default_text_renderer, highlighted_text_renderer, pos_anchor)
 		self.variable_to_change = mutable_variable_to_change_on_click
 		self.new_data_for_variable = new_data_for_variable
@@ -227,7 +247,7 @@ class SettingsMenuBoxLambdaTry(BaseMenuBox):
 	When clicked, it will the change the variable_to_change_on_click 
 	to the new_data_for_variable both passed in constructor
 	"""
-	def __init__(self, lambda_on_click_func, page: Page, display_pos: tuple[int, int], text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, pos_anchor: str = "middle"):
+	def __init__(self, lambda_on_click_func, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		super().__init__(page, display_pos, text, default_text_renderer, highlighted_text_renderer, pos_anchor)
 		self.on_click_fun = lambda_on_click_func
 	
@@ -300,6 +320,7 @@ class Arrow:
 		if new_side_of_box not in ("left", "right"):
 			raise ValueError("side_of_box must be 'left' or 'right'.")
 		self.side_of_box = new_side_of_box
+		self.x = self.selected_box.get_width() + self.space_btw_box_and_arrow
 
 	def display(self, win: pygame.surface.Surface):
 		"""

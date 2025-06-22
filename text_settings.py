@@ -47,6 +47,11 @@ class BaseTextRenderer(ABC):
 		"""
 		raise NotImplementedError()
 	
+	def get_font_height(self) -> int:
+		"""
+		Returns the height of a character in this text settings' font
+		"""
+		return self.text_settings.font.get_height()
 	def get_font(self) -> Font:
 		"""
 		Returns this renderer's text settings' font object
@@ -113,41 +118,3 @@ GAME_OVER_MSG_TEXT_RENDERER = TextRendererWithSingleColor(GAME_OVER_MSG_TEXT_SET
 MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, MENU_BOX_DEFAULT_FONT_COLOR)
 MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER= TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, MENU_BOX_HIGHLIGHTED_FONT_COLOR)
 RAINBOW_MENU_BOX_TEXT_RENDERER = TextRendererWithMultiColor(MENU_BOX_TEXT_SETTINGS, RAINBOW_SNAKE_COLORS)
-
-# @dataclass (frozen = True)
-# class TextRendererWithTwoColors(BaseTextRenderer):
-# 	first_color: tuple[int, int, int]
-# 	second_color: tuple[int, int, int]
-	
-	
-# 	def render(self) -> tuple[Surface, Surface]:
-# 		"""
-# 		Renders a tuple of 2 surfaces of the rendered text. 
-# 		Each surface has the same font and anti-aliasing bool. 
-# 		The first surface is the first_color
-# 		and the second is the second_color (Can be used for highlighting) 
-
-# 		Parameters:
-# 				- (str) text: The text to be rendered
-# 		Returns:
-# 				- tuple[Surface, Surface] containing the default and highlighted text
-# 		"""
-# 		default_surface = super().render_surface()
-# 		highlight_surface = None
-# 		if self.highlight_color:
-# 			highlight_surface = self.font.render(self.text, True, self.highlight_color)
-# 		return default_surface, highlight_surface
-
-
-# @dataclass (frozen = True)
-# class TextRendererWithoutColor(BaseTextSettings):
-# 	def render_surface(self, text: str, color: tuple[int, int, int]) -> Surface:
-# 		"""
-# 		Returns a surface containing the rendered text 
-# 		based on this text settings object's color, font and anti_aliasing bool
-# 		Parameters:
-# 			- (str) text: The text to be rendered
-# 		Returns:
-# 			- The rendered pygame surface of the text
-# 		"""
-# 		return self.font.render(self.text, self.anti_aliasing_is_on, color)

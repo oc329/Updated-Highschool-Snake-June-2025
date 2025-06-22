@@ -6,6 +6,7 @@ import pygame
 from math import ceil
 
 from colors import WHITE
+from enums import TextSurfacePosAnchor
 from screen_info import ensure_pos_is_on_screen
 from text_settings import BaseTextRenderer
 
@@ -38,14 +39,14 @@ class BaseTextSurface(ABC):
     """
     
     def __init__(self, text: str, display_pos: tuple[int], text_renderer: BaseTextRenderer,
-                 pos_anchor = "start"):
+                 pos_anchor: TextSurfacePosAnchor = TextSurfacePosAnchor.START):
         """
         Parameters:
         - text (str): The text to be displayed.
         - display_pos (tuple): The position (x, y) of the text.
         - font_obj (Font): The font object to be used for rendering.
         - text_renderer (BaseTextRenderer): The BaseTextRenderer object that contains the font, color and anti_alliasing info
-        - pos_anchor (str): 'start', 'middle', or 'end' – controls how text is aligned relative to `pos`
+        - pos_anchor (TextSurfacePosAnchor): 'start', 'middle', or 'end' – controls how text is aligned relative to `pos`
         """
         self.text = text
         self.text_renderer = text_renderer
@@ -70,8 +71,9 @@ class BaseTextSurface(ABC):
         updates the display position accordingly.
         Raises an error if the position anchor isn't 'start', 'middle' or 'end'
         """
-        if new_pos_anchor not in ('start', 'middle', 'end'):
-            raise ValueError("anchor must be 'start', 'middle', or 'end'")
+        possible_values = [pos_anchor.value for pos_anchor in TextSurfacePosAnchor]
+        if new_pos_anchor not in possible_values:
+            raise ValueError(f"Anchor should be {possible_values}")
         self.pos_anchor = new_pos_anchor
         self._set_display_pos_based_on_anchor()
 

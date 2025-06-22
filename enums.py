@@ -10,7 +10,27 @@ class Direction(Enum):
     RIGHT = (1, 0)
 
 class PageName(Enum):
-    MAIN_MENU = "Main Menu"
-    SNAKE_SKIN_SETTINGS = "Snake Skins"
-    SCREEN_SETTINGS = "Screen Settings"
+    MAIN_MENU = 'Main Menu'
+    SNAKE_SKIN_SETTINGS = 'Snake Skins'
+    SCREEN_SETTINGS = 'Screen Settings'
 
+class SectorType(Enum):
+    VERTICAL = 'vertical'
+    HORIZONTAL = 'horizontal'
+
+class TextSurfacePosAnchor(Enum):
+    START = 'start'
+    MIDDLE = 'middle'
+    END = ''
+
+class AbstractSectorPosAnchor(Enum):
+    pass
+class HorizontalSectorPosAnchor(AbstractSectorPosAnchor): 
+    TOP = 'top'
+    MIDDLE = 'middle' 
+    BOTTOM = 'bottom'
+
+class VerticalSectorPosAnchor(AbstractSectorPosAnchor): 
+    LEFT = 'left'
+    MIDDLE = 'middle' 
+    RIGHT = 'right'
