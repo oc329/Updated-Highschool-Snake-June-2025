@@ -77,9 +77,7 @@ class GameStateManager:
                 self.game_loop_event_handler.record_input()
                 snake_direction = self.game_loop_event_handler.direction_key_pressed()
                 if snake_direction is not None:
-                    snake_direction_tuple = snake_direction.value
-                    print(snake_direction_tuple)
-                    self.game_snake.change_direction(snake_direction_tuple)
+                    self.game_snake.change_direction(snake_direction)
                     
                 self.game_snake.move_forward_by_one() #Moves adds 1 column or row to the grid pos depending on the pieces' current directions 
                 self.game_snake.check_for_fatal_collisions()
@@ -88,7 +86,7 @@ class GameStateManager:
                     return 
                 
                 if self.game_snake.is_colliding_with_given_apple(self.game_apple):
-                    self.game_apple.relocate()
+                    self.game_apple.relocate(self.game_snake)
                     self.game_snake.add_end_segment()
                     updated_score_msg = (
                     "Score " + str(self.game_snake.total_length - self.game_snake.starting_length)
@@ -98,19 +96,12 @@ class GameStateManager:
                 self.game_snake.display(WINDOW)
                 self.game_apple.display(WINDOW)
                 self.game_score_text_surface.display(WINDOW)
-                
-
                 pygame.display.flip()
-
             self.fps_controller.limit_fps()
-    
-    def game_over_loop(self):
 
+    def game_over_loop(self):
         game_over_sound_effect = pygame.mixer.Sound("super_mario_game_over.wav")
         pygame.mixer.Sound.play(game_over_sound_effect)
-
-
-        ### 
 
         ## Measuring Time, Using the time elapsed as the while condition
         start_time = int(

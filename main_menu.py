@@ -12,16 +12,18 @@ pygame.init()
 from colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
 from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, SnakeSkinsSettingsPage
 from enums import PageName
-from screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN
+from screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN
 from text_surface import HighlightableEditableSingleLineTextSurface
-from snake import Snake 
+from snake import MenuSnake, Snake
 
 
 class Menu: 
+    ## Snake Dummy Grid Poitions b/c it gets moved to correct position within each page it appears in
+    #MENU_SNAKE_DUMMY_GRID_POS = (0, 0)
     def __init__ (self, game_snake: Snake):
         self.is_running = True
         self.game_snake = game_snake
-        self.menu_snake = Snake(MAIN_MENU_SNAKE_STARTING_GRID_POS)
+        self.menu_snake = MenuSnake(MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS)
         
         
         ##Menu snake is a snake that moves along the bottom of the home page. Spawns in the middle bottom of screen and continues indefinitely
@@ -32,12 +34,12 @@ class Menu:
         
         ## Determines the home page's y distance from title
         
-        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS)
+        self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self.menu_snake, self, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS)
         self.screen_settings_page = ScreenSettingsPage(self, (0,0), SCREEN_SIZE)
         self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, SCREEN_SIZE)
         
         self.active_page = self.main_menu_page
-        
+
         self.page_hierarchy = {
             PageName.MAIN_MENU: 
             {
@@ -55,7 +57,7 @@ class Menu:
                 }
             }
         }
-        self.set_page_relationshhups()
+        self.set_page_realtionships()
         ### User Page and Box Sselection
         self.selected_box : HighlightableEditableSingleLineTextSurface = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
 
@@ -74,7 +76,7 @@ class Menu:
         self.change_page(self.active_page.outer_page)
         
     ## For transition boxes
-    def change_page(self, new_page: 'Page'): 
+    def change_page(self, new_page: Page): 
         """
         Sets the active page to the new passed page.
 
@@ -89,18 +91,9 @@ class Menu:
         self.active_page = new_page
         self.selected_box = new_page.menu_boxes[0]
         self.highlight_selected_box() 
+        self.active_page.on_enter()
 
-    def change_to_outer_page(self):
-        """
-        If the current page has an outer page. Changes the current page 
-        to the outer page. Otherwise, does nothing.
-        """
-        if self.active_page.outer_page is None:
-            return 
-        
-        self.change_page(self.active_page.outer_page)
-    
-    def set_page_relationshhups(self):
+    def set_page_realtionships(self):
         """
         Sets the outer and child pages of each page. Uses the recurisve set page relationship method 
         to set each page's outer and child pages based on the page_hierarchy dict
@@ -202,7 +195,7 @@ class Menu:
         Displays the selection arrow and
         all the current page's menu boxes and additional items
         """
-        self.active_page.display(win) 
+        self.active_page.display(win)
         self.arrow.display(win)
 
 

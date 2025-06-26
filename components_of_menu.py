@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING
 pygame.init()
 
 from colors import ARROW_COLOR, RAINBOW_SNAKE_COLORS
-from enums import AbstractSectorPosAnchor, HorizontalSectorPosAnchor, PageName, SectorType, TextSurfacePosAnchor, VerticalSectorPosAnchor
+from enums import AbstractSectorPosAnchor, Direction, HorizontalSectorPosAnchor, PageName, SectorType, TextSurfacePosAnchor, VerticalSectorPosAnchor
 from event_handler import quit_program
 from page_sector_layout import AbstractSectorLayoutManager, HorizontalSectorLayoutManager, VerticalSectorLayoutManager
-from screen_info import ARROW_SIZE, CENTER_OF_SCREEN, MIDDLE_TOP_OF_SCREEN, SCREEN_HEIGHT, SCREEN_WIDTH
-from snake import Snake
+from screen_info import ARROW_SIZE, CENTER_OF_SCREEN, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, MIDDLE_TOP_OF_SCREEN, SCREEN_HEIGHT, MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_SKINS_PAGE
+from snake import MenuSnake
 from text_settings import BaseTextRenderer, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, MENU_BOX_TEXT_SETTINGS, MENU_TITLE_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER, TextRendererWithSingleColor
 from text_surface import SingleLineTextSurface, HighlightableEditableSingleLineTextSurface
 
@@ -25,7 +25,7 @@ class Page(ABC):
 		self.menu = menu
 		
 		self.outer_page : Page | None = None
-		self.child_pages: dict[str : Page] =  {}
+		self.child_pages: dict[str, Page] =  {}
 		self.menu_boxes: list[HighlightableEditableSingleLineTextSurface] = []
 		self.highlighted_menu_box_text_renderer = MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER
 
@@ -63,12 +63,27 @@ class Page(ABC):
 		
 		return self.menu_boxes[self.selected_box_index]
 	
+	def on_enter(self):
+		"""
+		Method that is called when this page becomes active 
+		"""
+		pass
+
+	def on_every_frame(self):
+		"""
+		Method that is called every display frame 
+		when this page is active 
+		"""
+		pass
+	
+
 	def display(self, win: pygame.surface.Surface):
 		"""
 		Displays all the Game Title and all Menu boxes 
 		"""
 		for menu_box in self.menu_boxes: 
 			menu_box.display(win)
+		self.on_every_frame()
 
 class PageWithBoxesCompactedIntoSector(Page):
 	"""
@@ -100,9 +115,10 @@ class PageWithBoxesCompactedIntoSector(Page):
 		return layout_manager
 	
 class MainMenuPage(PageWithBoxesCompactedIntoSector):
-	def __init__(self, game_title: str, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = TextSurfacePosAnchor.MIDDLE):
+	def __init__(self, game_title: str, menu_snake: MenuSnake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = TextSurfacePosAnchor.MIDDLE):
 		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
 		self.GAME_TITLE = game_title
+		self.menu_snake = menu_snake
 		y_space_btw_main_menu_title_and_first_box = SCREEN_HEIGHT // 16
 		title_pos = (CENTER_OF_SCREEN[0], top_left_pos[1] - y_space_btw_main_menu_title_and_first_box)
 		self.title_text_surface = SingleLineTextSurface(game_title, MIDDLE_TOP_OF_SCREEN, MENU_TITLE_TEXT_RENDERER, pos_anchor = TextSurfacePosAnchor.MIDDLE)
@@ -135,32 +151,50 @@ class MainMenuPage(PageWithBoxesCompactedIntoSector):
 		self.quit_box = QuitProgramMenuBox(self, "QUIT", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
 		self.menu_boxes = [self.play_box, self.color_page_transition_box, self.screen_page_transition_box, self.quit_box]
 
+	def on_enter(self):
+		### Move snake to postiion with the head in the right direction 
+		self.menu_snake.move_to_new_pos_and_change_to_any_direction(MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, Direction.RIGHT) 
+
+	def on_every_frame(self):
+		"""
+		Moves the menu snake forward one
+		"""
+		self.menu_snake.move_forward_by_one_until_wall()
+		
 	def display(self, win: pygame.surface.Surface):
 		"""
-		Displays all the Game Title and all Menu boxes 
+		Displays all the Game Title and all Menu boxes.
 		"""
-		for menu_box in self.menu_boxes: 
-			menu_box.display(win)
+		super().display(win)
 		self.title_text_surface.display(win)
+		self.menu_snake.display(win)
 
 class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
-	def __init__(self, colors: dict[str : tuple[int, int, int]], snake_to_edit: Snake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
+	def __init__(self, colors: dict[str : tuple[int, int, int]], snake_to_edit: MenuSnake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		self.colors = colors
 		self.snake_to_edit = snake_to_edit
 		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
-		
-		
+
 	def create_boxes(self):
 		for color_name, color_rgb in self.colors.items():
 			text = color_name
 			default_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
-			highlighted_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
-			self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, text, default_text_renderer, default_text_renderer))
-		
+			#self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, text, default_text_renderer, default_text_renderer))
+			lambda_change_color_func = lambda color=color_rgb: self.snake_to_edit.change_color(color)  
+			self.menu_boxes.append(SettingsMenuBoxLambdaTry(lambda_change_color_func, self, text, default_text_renderer, default_text_renderer))
+
 		## Adding Rainbow Menu Box
 		rainbow_text = "RAINBOW"
 		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, rainbow_text, RAINBOW_MENU_BOX_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER)
 		self.menu_boxes.append(rainbow_color_menu_box)
+
+	def on_enter(self):
+		### Move snake to postiion and set it to static 
+		self.snake_to_edit.move_to_new_pos_and_change_to_any_direction(MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_SKINS_PAGE, Direction.UP)
+
+	def display(self, win):
+		super().display(win)
+		self.snake_to_edit.display(win)
 
 
 class ScreenSettingsPage(PageWithBoxesCompactedIntoSector):
@@ -181,6 +215,7 @@ class BaseMenuBox(HighlightableEditableSingleLineTextSurface):
 			display_pos = BaseMenuBox.DUMMY_POS
 		super().__init__(text, display_pos, default_text_renderer, highlighted_text_renderer, pos_anchor)
 		self.page = page
+
 
 	@abstractmethod
 	def on_click(self):
@@ -210,7 +245,6 @@ class PlayMenuBox(BaseMenuBox):
 	Subclass of MenuBox.
 	MenuBox that starts the game when clicked
 	"""
-
 	def on_click(self):
 		"""
 		Ends the menu loop and starts the game
@@ -252,7 +286,7 @@ class SettingsMenuBoxLambdaTry(BaseMenuBox):
 	"""
 	def __init__(self, lambda_on_click_func, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer, display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		super().__init__(page, text, default_text_renderer, highlighted_text_renderer, display_pos, pos_anchor)
-		self.on_click_fun = lambda_on_click_func
+		self.on_click_func = lambda_on_click_func
 	
 	def on_click(self):
 		"""
@@ -323,7 +357,6 @@ class Arrow:
 		if new_side_of_box not in ("left", "right"):
 			raise ValueError("side_of_box must be 'left' or 'right'.")
 		self.side_of_box = new_side_of_box
-		self.x = self.selected_box.get_width() + self.space_btw_box_and_arrow
 
 	def display(self, win: pygame.surface.Surface):
 		"""

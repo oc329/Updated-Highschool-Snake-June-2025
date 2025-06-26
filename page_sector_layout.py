@@ -27,18 +27,7 @@ class AbstractSectorLayoutManager(ABC):
         Returns the y coordinate of the top of the sector
         """
         return self.top_left_pos[1]
-    
-    # def calculate_spacing_btw_boxes(start: int, end: int, num_boxes: int, box_size: int) -> int:
-    #     """
-    #     Calculates the spacing btw boxes based on the start and end (x for horizontal, y for vertical)
-    #     """
-    #     total_space = end - start
-    #     total_box_space = box_size * num_boxes
-    #     leftover_space = total_space - total_box_space
-
-    #     spacing = leftover_space // (num_boxes - 1)
-    #     return spacing
-    
+        
     def ensure_there_are_boxes(self, boxes: list):
         """
         Raises an error if thee menu boxes list is empty. 
@@ -103,7 +92,6 @@ class VerticalSectorLayoutManager(AbstractSectorLayoutManager):
         bottom_y, top_y = self.bottom_right_pos[1], self.top_left_pos[1]
         display_interval = (bottom_y - top_y) // len(boxes)
         menu_box_x = self.get_menu_box_x()
-        print(f"top left pos {self.top_left_pos}")
         for box_i, box in enumerate(boxes):
             box.change_pos_anchor(self.box_pos_anchor)
             pos = (menu_box_x, top_y + display_interval * box_i)
@@ -125,11 +113,11 @@ class HorizontalSectorLayoutManager(AbstractSectorLayoutManager):
         Parameter: 
             - (list) boxes: List of all the menu boxes on the page
         """
-        return sum(box.get_width for box in boxes)
+        return sum(box.get_width() for box in boxes)
      
     def ensure_boxes_fit_in_horizontal_sector(self, boxes: list):
         min_sector_width = self._calculate_combined_boxes_width(boxes)
-        sector_width = self.top_left_pos[0] - self.bottom_right_pos[0]
+        sector_width = self.bottom_right_pos[0] - self.top_left_pos[0]
 
         if min_sector_width > sector_width:
             raise ValueError(f"Boxes do not fit horizontally in sector. "
@@ -147,13 +135,16 @@ class HorizontalSectorLayoutManager(AbstractSectorLayoutManager):
         if self.sector_pos_anchor == HorizontalSectorPosAnchor.TOP:
             menu_box_y = self.top_left_pos[1]
         elif self.sector_pos_anchor == HorizontalSectorPosAnchor.MIDDLE:
-            half_of_sector_height = self.top_left_pos[1] + (self.top_left_pos[1] - self.bottom_right_pos[1]) // 2
+            half_of_sector_height = self.top_left_pos[1] + (self.bottom_right_pos[1] - self.top_left_pos[1]) // 2
             menu_box_y = half_of_sector_height
         elif self.sector_pos_anchor == HorizontalSectorPosAnchor.BOTTOM:
             sector_height = self.top_left_pos[1] + (self.top_left_pos[1] - self.bottom_right_pos[1])
             menu_box_y = sector_height
-
+        else:
+            raise ValueError("Invalid Horizontal Sector Anchor")
+        
         return menu_box_y
+    
     def position_boxes(self, boxes: list):
         """
         Positions the page's menu boxes into the horizontal sector.

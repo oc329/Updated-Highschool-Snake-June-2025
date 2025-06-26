@@ -21,31 +21,28 @@ CELL_SIZE = (SCREEN_WIDTH // TOTAL_COLUMNS, SCREEN_HEIGHT // TOTAL_ROWS)
 CELL_WIDTH, CELL_HEIGHT = CELL_SIZE
 
 GAME_SNAKE_STARTING_GRID_POS  = (TOTAL_COLUMNS // 2, TOTAL_ROWS // 2)
-MAIN_MENU_SNAKE_STARTING_GRID_POS =  (TOTAL_ROWS // 4 * 3, TOTAL_COLUMNS // 2)
-MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_COLORS_PAGE = (TOTAL_ROWS // 2, TOTAL_COLUMNS  // 4 * 3)
+BOTTOM_MIDDLE_OF_GRID_THAT_LOOKS_GOOD_FOR_SNAKE = (TOTAL_COLUMNS // 2, TOTAL_ROWS * 17 // 20)
+MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS =  BOTTOM_MIDDLE_OF_GRID_THAT_LOOKS_GOOD_FOR_SNAKE 
+MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_SKINS_PAGE = (TOTAL_COLUMNS * 3 // 4 , TOTAL_ROWS // 3)
 
 GAME_SCORE_RATIO_OF_OF_SCREEN = 36
 GAME_SCORE_FONT_SIZE = (SCREEN_WIDTH + SCREEN_HEIGHT) // GAME_SCORE_RATIO_OF_OF_SCREEN
 GAME_OVER_MSG_FONT_SIZE = (SCREEN_WIDTH + SCREEN_HEIGHT) // 30
 MENU_TITLE_FONT_SIZE = (SCREEN_WIDTH + SCREEN_HEIGHT) // 10
 ratio_of_menu_box_to_screen =  12
-
-
-
 MENU_BOX_DEFAULT_FONT_SIZE = SCREEN_HEIGHT // ratio_of_menu_box_to_screen
 ARROW_SIZE = (MENU_BOX_DEFAULT_FONT_SIZE, MENU_BOX_DEFAULT_FONT_SIZE // 3)
-MENU_TITLE_CENTER_POS = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3)
 
+MENU_TITLE_CENTER_POS = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3)
 MAIN_MENU_PAGE_TOP_LEFT_POS = (0, MENU_TITLE_FONT_SIZE + (MENU_BOX_DEFAULT_FONT_SIZE * 3 // 2))
 MAIN_MENU_PAGE_BOTTOM_RIGHT_POS = (SCREEN_WIDTH, SCREEN_HEIGHT - (SCREEN_HEIGHT // 7))
 
+BOTTOM_MIDDLE_TENTH_OF_GRID_POS = (TOTAL_COLUMNS // 2, TOTAL_ROWS // 10)
 
 GRID_POS_TO_DISPLAY_POS = tuple([
     [(column * CELL_WIDTH, row * CELL_HEIGHT) for row in range(TOTAL_ROWS)]
     for column in range(TOTAL_COLUMNS)])
 
-print("outer list =",  len(GRID_POS_TO_DISPLAY_POS))
-print("inner list =",  len(GRID_POS_TO_DISPLAY_POS[0]))
 def convert_grid_pos_to_display_pos(grid_pos: tuple[int, int]):
     """
     Converts the grid position of (row_column) to a display pos of (x_coor, y_coor)
@@ -56,7 +53,6 @@ def convert_grid_pos_to_display_pos(grid_pos: tuple[int, int]):
     Returns: 
         - tuple[int, int] display_pos : tuple of (x_coor, y_coor)
     """
-    #print(grid_pos)
     return GRID_POS_TO_DISPLAY_POS[grid_pos[0]][grid_pos[1]]
 
 def ensure_pos_is_on_screen(pos: tuple[int, int]):
@@ -67,3 +63,14 @@ def ensure_pos_is_on_screen(pos: tuple[int, int]):
     if not (0 <= x <= SCREEN_WIDTH and 0 <= y <= SCREEN_HEIGHT):
         raise ValueError(f"Display position is outside the screen boundaries.\n"
                          f"Display pos: {pos}")
+
+def ensure_grid_pos_is_on_grid(grid_pos: tuple[int, int]):
+    """
+    Raises an error if the given (column, row) grid position 
+    isn't within the total column and row boundaries.
+    """
+    column, row = grid_pos
+    if not (0 <= column < TOTAL_COLUMNS and 0 <= row < TOTAL_ROWS):
+        raise ValueError(f"Display position is outside the grid boundaries.\n"
+                         f"Grid pos: {grid_pos}\n"
+                         f"Total Columns: {TOTAL_COLUMNS}, Total Rows: {TOTAL_ROWS}") 
