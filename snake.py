@@ -4,6 +4,7 @@ pygame.init() #Initializes all pygame classes and functions
 import random 
 
 from apple import Apple
+from skin import SnakeColorSkin, SnakeImageSkin, color_snake_skin_manager, img_snake_manager
 from colors import ensure_is_RGB, SNAKE_STARTING_COLOR
 from enums import Direction 
 from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, ensure_grid_pos_is_on_grid, TOTAL_COLUMNS, TOTAL_ROWS
@@ -21,6 +22,7 @@ class Snake():
     def __init__(self, starting_head_grid_pos: tuple[int, int],  starting_direction = Direction.RIGHT.value, starting_length = 5):
         ## starting num of pieces and speed multiple can be changed in instance's arguments 
         self.is_alive = True 
+        self.skin = img_snake_manager.get_skin("Chain Chomp") #color_snake_skin_manager.get_skin("RED")
         self.starting_head_grid_pos = starting_head_grid_pos
         self.direction = starting_direction
         
@@ -136,6 +138,9 @@ class Snake():
         last_segment = self.segment_grid_positions[-1]
         self.segment_grid_positions.append(last_segment)   
     
+    def change_skin(self, new_skin: SnakeColorSkin | SnakeImageSkin):
+        self.skin = new_skin
+        
     def change_color(self, new_color: tuple[int, int, int]):
         """
         Changes the color of the snake to the new given color. 
@@ -156,10 +161,11 @@ class Snake():
         """
         Displays the snake on the screen
         """
-        for seg_grid_pos in self.segment_grid_positions:
-            if not (0 <= seg_grid_pos[0] < TOTAL_COLUMNS and 0 <= seg_grid_pos[1] < TOTAL_ROWS):
-                continue  # Skip drawing off-screen segments
-            pygame.draw.rect(win, self.color, rect = (*convert_grid_pos_to_display_pos(seg_grid_pos), *CELL_SIZE))
+        self.skin.display(win,self.segment_grid_positions, self.direction)
+        # for seg_grid_pos in self.segment_grid_positions:
+        #     if not (0 <= seg_grid_pos[0] < TOTAL_COLUMNS and 0 <= seg_grid_pos[1] < TOTAL_ROWS):
+        #         continue  # Skip drawing off-screen segments
+        #     pygame.draw.rect(win, self.color, rect = (*convert_grid_pos_to_display_pos(seg_grid_pos), *CELL_SIZE))
                      
         
 class MenuSnake(Snake):

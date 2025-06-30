@@ -17,6 +17,7 @@ BOTTOM_MIDDLE_FIFTH_OF_SCREEN = (CENTER_OF_SCREEN[0], TOP_MIDDLE_FIFTH_OF_SCREEN
 ## Any Magic Numbers are just what I thought seemed like a good size or pos
 TOTAL_COLUMNS = 40
 TOTAL_ROWS = 20
+print(f"number of cells is {TOTAL_COLUMNS} * {TOTAL_ROWS} = {TOTAL_COLUMNS * TOTAL_ROWS}")
 CELL_SIZE = (SCREEN_WIDTH // TOTAL_COLUMNS, SCREEN_HEIGHT // TOTAL_ROWS)
 CELL_WIDTH, CELL_HEIGHT = CELL_SIZE
 
@@ -54,6 +55,13 @@ def convert_grid_pos_to_display_pos(grid_pos: tuple[int, int]):
         - tuple[int, int] display_pos : tuple of (x_coor, y_coor)
     """
     return GRID_POS_TO_DISPLAY_POS[grid_pos[0]][grid_pos[1]]
+
+def grid_pos_is_on_screen(grid_pos: tuple[int, int]):
+    """
+    Returns True if the grid position is on the screen. Otherwise False. 
+    """
+    column, row = grid_pos
+    return (0 <= column < TOTAL_COLUMNS and 0 <= row < TOTAL_ROWS)
 
 def ensure_pos_is_on_screen(pos: tuple[int, int]):
     """

@@ -10,9 +10,10 @@ pygame.init()
 
 ### My Modules
 from colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
-from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, SnakeSkinsSettingsPage
+from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, ColorSnakeSkinsSettingsPage
 from enums import PageName
 from screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN
+from skin import color_snake_skin_manager
 from text_surface import HighlightableEditableSingleLineTextSurface
 from snake import MenuSnake, Snake
 
@@ -36,7 +37,7 @@ class Menu:
         
         self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self.menu_snake, self, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS)
         self.screen_settings_page = ScreenSettingsPage(self, (0,0), SCREEN_SIZE)
-        self.snake_colors_settings_page = SnakeSkinsSettingsPage(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, SCREEN_SIZE)
+        self.snake_colors_settings_page = ColorSnakeSkinsSettingsPage(color_snake_skin_manager, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, SCREEN_SIZE)
         
         self.active_page = self.main_menu_page
 
@@ -137,7 +138,7 @@ class Menu:
         Ends the Menu loop and starts the game. Changes the game snake colors to the menu snake 
         """
         self.is_running = False
-        self.game_snake.change_color(self.menu_snake.color)
+        self.game_snake.change_skin(self.menu_snake.skin)
 
     def unhighlight_selected_box(self):
         """

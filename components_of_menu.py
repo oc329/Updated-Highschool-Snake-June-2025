@@ -7,9 +7,10 @@ from colors import ARROW_COLOR, RAINBOW_SNAKE_COLORS
 from enums import AbstractSectorPosAnchor, Direction, HorizontalSectorPosAnchor, PageName, SectorType, TextSurfacePosAnchor, VerticalSectorPosAnchor
 from event_handler import quit_program
 from page_sector_layout import AbstractSectorLayoutManager, HorizontalSectorLayoutManager, VerticalSectorLayoutManager
+from skin import AbstractSkinManager, SnakeColorSkin
 from screen_info import ARROW_SIZE, CENTER_OF_SCREEN, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, MIDDLE_TOP_OF_SCREEN, SCREEN_HEIGHT, MAIN_MENU_SNAKE_STARTING_GRID_POS_ON_SKINS_PAGE
 from snake import MenuSnake
-from text_settings import BaseTextRenderer, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, MENU_BOX_TEXT_SETTINGS, MENU_TITLE_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER, TextRendererWithSingleColor
+from text_settings import BaseTextRenderer, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, MENU_BOX_TEXT_SETTINGS, MENU_TITLE_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER, TextRendererWithMultiColor, TextRendererWithSingleColor
 from text_surface import SingleLineTextSurface, HighlightableEditableSingleLineTextSurface
 
 if TYPE_CHECKING:
@@ -169,24 +170,31 @@ class MainMenuPage(PageWithBoxesCompactedIntoSector):
 		self.title_text_surface.display(win)
 		self.menu_snake.display(win)
 
-class SnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
-	def __init__(self, colors: dict[str : tuple[int, int, int]], snake_to_edit: MenuSnake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
-		self.colors = colors
+class ColorSnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
+	def __init__(self, snake_skin_manager: AbstractSkinManager, snake_to_edit: MenuSnake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
+		self.snake_skin_manager = snake_skin_manager
 		self.snake_to_edit = snake_to_edit
 		super().__init__(menu, top_left_pos, bottom_right_pos, box_pos_anchor)
 
 	def create_boxes(self):
-		for color_name, color_rgb in self.colors.items():
-			text = color_name
-			default_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
-			#self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, text, default_text_renderer, default_text_renderer))
-			lambda_change_color_func = lambda color=color_rgb: self.snake_to_edit.change_color(color)  
-			self.menu_boxes.append(SettingsMenuBoxLambdaTry(lambda_change_color_func, self, text, default_text_renderer, default_text_renderer))
+		for skin in self.snake_skin_manager.get_all_skins():
+			self.create_color_skin_box(skin)
+	
+	def create_color_skin_box(self, skin: SnakeColorSkin):
+		"""
+		Adds a Menu box to the boxes list that contains the Snake Color Skin
+		Parameters: 
+			- (SnakeColorSkin) skin: The current Snake Color Skin to make a Menu box out of 
+		"""
+		if len(skin.colors) > 1:
+			text_renderer = TextRendererWithMultiColor(MENU_BOX_TEXT_SETTINGS, skin.colors)
+		else:
+			text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, skin.colors[0])
+		
+		lambda_change_color_func = lambda skin = skin: self.snake_to_edit.change_skin(skin)  
+		self.menu_boxes.append(SettingsMenuBoxLambdaTry(lambda_change_color_func, self, skin.name, text_renderer, text_renderer))
+		
 
-		## Adding Rainbow Menu Box
-		rainbow_text = "RAINBOW"
-		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, rainbow_text, RAINBOW_MENU_BOX_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER)
-		self.menu_boxes.append(rainbow_color_menu_box)
 
 	def on_enter(self):
 		### Move snake to postiion and set it to static 
@@ -364,3 +372,21 @@ class Arrow:
 		"""
 		pygame.draw.rect(win, ARROW_COLOR, (*self.display_pos, self.width, self.height))
 
+
+
+"""
+
+	def create_boxes(self):
+		for color_name, color_rgb in self.colors.items():
+			text = color_name
+			default_text_renderer = TextRendererWithSingleColor(MENU_BOX_TEXT_SETTINGS, color_rgb)
+			#self.menu_boxes.append(SettingsMenuBox(self.snake_to_edit, color_rgb, self, text, default_text_renderer, default_text_renderer))
+			lambda_change_color_func = lambda color=color_rgb: self.snake_to_edit.change_color(color)  
+			self.menu_boxes.append(SettingsMenuBoxLambdaTry(lambda_change_color_func, self, text, default_text_renderer, default_text_renderer))
+
+		## Adding Rainbow Menu Box
+		rainbow_text = "RAINBOW"
+		rainbow_color_menu_box = SettingsMenuBox(self.snake_to_edit, RAINBOW_SNAKE_COLORS, self, rainbow_text, RAINBOW_MENU_BOX_TEXT_RENDERER, RAINBOW_MENU_BOX_TEXT_RENDERER)
+		self.menu_boxes.append(rainbow_color_menu_box)
+
+"""

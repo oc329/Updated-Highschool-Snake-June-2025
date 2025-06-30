@@ -2,7 +2,7 @@ import pygame
 pygame.init()
 import time
 
-from apple import Apple
+from apple import Apple, AppleManager
 from colors import GAME_LOOP_BG_COLOR, MAIN_MENU_BG_COLOR
 from enums import TextSurfacePosAnchor
 from event_handler import GameLoopEventHandler, MainMenuEventHamdler
@@ -25,7 +25,9 @@ class GameStateManager:
         
         self.game_snake = Snake(GAME_SNAKE_STARTING_GRID_POS)
         self.game_apple = Apple()
-
+        num_of_apples = 3
+        self.apple_manager = AppleManager(num_of_apples)
+        self.apple_manager.relocate_all_to_legal_positions(self.game_snake)
         game_score_msg = "Score 0"
         game_score_pos = (SCREEN_WIDTH, 0)
         self.game_score_text_surface = EditableSingleLineTextSurface("Score 0", game_score_pos, GAME_SCORE_TEXT_RENDERER, TextSurfacePosAnchor.END)
@@ -85,16 +87,18 @@ class GameStateManager:
                 if not self.game_snake.is_alive:
                     return 
                 
-                if self.game_snake.is_colliding_with_given_apple(self.game_apple):
-                    self.game_apple.relocate(self.game_snake)
+                if self.apple_manager.is_colliding_with_snake_head(self.game_snake):
+                    self.apple_manager.relocate_colliding_apple(self.game_snake)
                     self.game_snake.add_end_segment()
                     updated_score_msg = (
                     "Score " + str(self.game_snake.total_length - self.game_snake.starting_length)
                     ) 
                     self.game_score_text_surface.change_text(updated_score_msg)
-                     
+                
+                self.apple_manager.display(WINDOW)
                 self.game_snake.display(WINDOW)
-                self.game_apple.display(WINDOW)
+                #self.game_apple.display(WINDOW)
+                
                 self.game_score_text_surface.display(WINDOW)
                 pygame.display.flip()
             self.fps_controller.limit_fps()
