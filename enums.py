@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 class Direction(Enum):
     """
@@ -9,8 +9,16 @@ class Direction(Enum):
     LEFT = (-1, 0)
     RIGHT = (1, 0)
 
+class MenuSnakeTeleportationType(Enum):
+    """
+    Enum for the different teleportation states for the menu snake (instant, wrapping, etc.)
+    """
+    INSTANT = auto()
+    WRAPPING = auto()
+    
 class PageName(Enum):
     MAIN_MENU = 'Main Menu'
+    TRANSITION_TO_SETTINGS = "Settings" 
     SNAKE_SKIN_SETTINGS = 'Snake Skins'
     SCREEN_SETTINGS = 'Screen Settings'
 
@@ -21,10 +29,15 @@ class SectorType(Enum):
 class TextSurfacePosAnchor(Enum):
     START = 'start'
     MIDDLE = 'middle'
-    END = ''
+    END = 'end'
 
 class AbstractSectorPosAnchor(Enum):
+    """
+    Describes where to position the Menu boxes
+    within the sector 
+    """
     pass
+
 class HorizontalSectorPosAnchor(AbstractSectorPosAnchor): 
     TOP = 'top'
     MIDDLE = 'middle' 
@@ -34,3 +47,4 @@ class VerticalSectorPosAnchor(AbstractSectorPosAnchor):
     LEFT = 'left'
     MIDDLE = 'middle' 
     RIGHT = 'right'
+

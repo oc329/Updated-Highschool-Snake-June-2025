@@ -10,22 +10,21 @@ pygame.init()
 
 ### My Modules
 from colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
-from components_of_menu import Arrow, MainMenuPage, Page, ScreenSettingsPage, ColorSnakeSkinsSettingsPage
-from enums import PageName
-from screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN
+from components_of_menu import Arrow, BaseMenuBox, MainMenuPage, Page, SettingsTransitionPage, ScreenSettingsPage, ColorSnakeSkinsSettingsPage
+from enums import PageName, MenuSnakeTeleportationType
+from screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_THIRD_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN, TOP_MIDDLE_THIRD_OF_SCREEN
 from skin import color_snake_skin_manager
 from text_surface import HighlightableEditableSingleLineTextSurface
-from snake import MenuSnake, Snake
+from snake import MenuSnake, GameSnake
 
 
 class Menu: 
     ## Snake Dummy Grid Poitions b/c it gets moved to correct position within each page it appears in
     #MENU_SNAKE_DUMMY_GRID_POS = (0, 0)
-    def __init__ (self, game_snake: Snake):
+    def __init__ (self, game_snake: GameSnake):
         self.is_running = True
         self.game_snake = game_snake
-        self.menu_snake = MenuSnake(MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS)
-        
+        self.menu_snake = MenuSnake(MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, MenuSnakeTeleportationType.INSTANT)
         
         ##Menu snake is a snake that moves along the bottom of the home page. Spawns in the middle bottom of screen and continues indefinitely
         ##speed_multiple is different b/c I want a slightly slower snake for the menu than the game
@@ -36,6 +35,7 @@ class Menu:
         ## Determines the home page's y distance from title
         
         self.main_menu_page = MainMenuPage(self.TITLE_MESSAGE, self.menu_snake, self, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS)
+        self.settings_transition_page = SettingsTransitionPage(self, TOP_MIDDLE_THIRD_OF_SCREEN, BOTTOM_MIDDLE_THIRD_OF_SCREEN)
         self.screen_settings_page = ScreenSettingsPage(self, (0,0), SCREEN_SIZE)
         self.snake_colors_settings_page = ColorSnakeSkinsSettingsPage(color_snake_skin_manager, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, SCREEN_SIZE)
         
@@ -45,22 +45,29 @@ class Menu:
             PageName.MAIN_MENU: 
             {
                 "Page" : self.main_menu_page,
-                "Children": {
-                    PageName.SNAKE_SKIN_SETTINGS :{
-                        "Page": self.snake_colors_settings_page, 
-                        "Children": {}
-                    },
-                    PageName.SCREEN_SETTINGS: {
-                        "Page": self.screen_settings_page, 
-                        "Children" : {}
-                    },
-                
+                "Children": 
+                {
+                    PageName.TRANSITION_TO_SETTINGS :
+                    {
+                        "Page": self.settings_transition_page, 
+                        "Children": {
+                            PageName.SNAKE_SKIN_SETTINGS :{
+                            "Page": self.snake_colors_settings_page, 
+                            "Children": {}
+                            },
+                            PageName.SCREEN_SETTINGS: {
+                                "Page": self.screen_settings_page, 
+                                "Children" : {}
+                            }
+                        }  
+                    }
                 }
             }
         }
         self.set_page_realtionships()
+        print(self.settings_transition_page.child_pages)
         ### User Page and Box Sselection
-        self.selected_box : HighlightableEditableSingleLineTextSurface = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
+        self.selected_box : BaseMenuBox = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
 
         ### Creating the Arrow Highlighter 
         space_between_arrow_and_box = self.selected_box.get_height() // 8
@@ -68,6 +75,12 @@ class Menu:
         ## self is this menu class #uses menu to access selected box attribute 
         ## Arrow instance to be after self.selected_box since the Arrow's ininitalization references self.selected_box and construction method __init__ doesn't search for the attribute like calling a method does
         self.highlight_selected_box()
+    
+    def click_selected_box(self):
+        """
+        Calls the on_click function of the selected box
+        """
+        self.selected_box.on_click()
 
     def open_outer_page(self):
         """
@@ -75,7 +88,7 @@ class Menu:
         Otherwise does nothing.
         """
         self.change_page(self.active_page.outer_page)
-        
+
     ## For transition boxes
     def change_page(self, new_page: Page): 
         """
@@ -110,7 +123,7 @@ class Menu:
             - (dict) current_node: The current page dict in the dictionary
             - (Page) parent_page: The parent page of this current Page
         """
-        current_page = current_node["Page"]
+        current_page: Page = current_node["Page"]
         children_dict = current_node["Children"]
 
         if parent_page is not None:
@@ -122,7 +135,7 @@ class Menu:
             for page_name, child_data in children_dict.items()
         }
 
-        current_page.child_pages = child_pages
+        current_page.set_child_pages(child_pages)
 
         ## If th ere are no children pages it does nothing 
         for child_data in children_dict.values():
@@ -189,7 +202,6 @@ class Menu:
             return
                             
         self.select_box(current_box_index - 1)
-            
 
     def display(self, win: pygame.surface.Surface): 
         """

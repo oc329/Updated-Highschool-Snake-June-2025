@@ -169,7 +169,6 @@ class RectangularSkinManager(AbstractSkinManager):
     def add_all_img_skins(self, dir_name: str):
         pass  # Future implementation
 
-
 class ColorSnakeSkinManager(AbstractSkinManager):
     def create_all_skins(self):
         is_retro = True
@@ -179,7 +178,6 @@ class ColorSnakeSkinManager(AbstractSkinManager):
         rainbow_colors = (tuple(RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP.values()))
         rainbow_snake_skin = SnakeColorSkin("RAINBOW", rainbow_colors, is_retro)
         self.skins.append(rainbow_snake_skin)
-
 
 class ImageSnakeSkinManager(AbstractSkinManager):
     def create_all_skins(self):

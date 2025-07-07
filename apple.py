@@ -8,7 +8,7 @@ from img_loader import load_img_with_white_bg_and_scale_to_size
 from screen_info import CELL_SIZE, convert_grid_pos_to_display_pos, TOTAL_COLUMNS, TOTAL_ROWS
 
 if TYPE_CHECKING:
-	from snake import Snake  # Import only for type hinting
+	from snake import AbstractSnake  # Import only for type hinting
 
 # from object import Object
 
@@ -22,7 +22,6 @@ class Apple:
         ## Sets apple's grid position to a random row and and column in the game grid
         self.width, self.height =  CELL_SIZE
         self.loaded_img =  load_img_with_white_bg_and_scale_to_size(apple_img_absolute_file_path, (self.width, self.height))
-    
     
     def change_grid_pos(self, new_grid_pos: tuple[int, int]): 
         """
@@ -42,7 +41,7 @@ class Apple:
         """
         return (random.randint(0, TOTAL_COLUMNS - 1), random.randint(0, TOTAL_ROWS - 1)) # Minus 1 since randint upper is inclusive
     
-    def relocate_to_legal_pos(self, snake: 'Snake', not_legal_grid_positions=()):
+    def relocate_to_legal_pos(self, snake: 'AbstractSnake', not_legal_grid_positions=()):
         """
         Teleports the apple to a random position not occupied by the snake and other specified positions.
         
@@ -62,22 +61,22 @@ class Apple:
     def display(self, win: Surface):
         win.blit(self.loaded_img, self.dipslay_pos)
 
-  
+
 class AppleManager:
-    def __init__(self, num_of_apples: int):
+    def __init__(self, num_of_apples: int, game_snake:'AbstractSnake'):
         """
         Manages apples, checking for collisions with snake and teleporting the colliding apple if true
         Should call relocate_all_to_legal_positions after init
         Parameters:
         - num_of_apples (int): The number of apples to manage.
         """
-        
         self.num_of_apples = num_of_apples
         self.APPLES_GRAPHICS_LAYER = 1
         self.apples: tuple[Apple] = tuple([Apple() for _ in range(self.num_of_apples)])
         self.colliding_apple_i: int | None = None
+        self.relocate_all_to_legal_positions(game_snake)
 
-    def relocate_all_to_legal_positions(self, snake: 'Snake'):
+    def relocate_all_to_legal_positions(self, snake: 'AbstractSnake'):
         """
         Teleports all apples to random legal positions.
         Makes sure the apples aren't teleported to the same spot
@@ -89,9 +88,8 @@ class AppleManager:
         for apple_i, apple in enumerate(self.apples):
             all_previous_apple_grid_positions = tuple(a.grid_pos for a in self.apples[:apple_i])
             apple.relocate_to_legal_pos(snake, all_previous_apple_grid_positions)
-            print(apple_i)
 
-    def is_colliding_with_snake_head(self, snake: 'Snake'):
+    def is_colliding_with_snake_head(self, snake: 'AbstractSnake'):
         """
         Returns True if any apples are in the same position as the snake head. 
         Otherwise False. 
@@ -109,7 +107,7 @@ class AppleManager:
         self.colliding_apple_i = colliding_apple_i
         return True
     
-    def relocate_colliding_apple(self, snake: 'Snake'):
+    def relocate_colliding_apple(self, snake: 'AbstractSnake'):
         """
         Teleports the apple that is colliding with the snake.
         Makes sure it doesn't teleport to a position already ocupied by other apples.
@@ -117,7 +115,7 @@ class AppleManager:
         Parameters:
         - snake (Snake): The snake object.
         """
-        colliding_apple = self.apples[self.colliding_apple_i]
+        colliding_apple: Apple = self.apples[self.colliding_apple_i]
         all_other_apple_positions = tuple(a.grid_pos for a in self.apples[:self.colliding_apple_i]) + tuple(a.grid_pos for a in self.apples[self.colliding_apple_i + 1:])
         colliding_apple.relocate_to_legal_pos(snake, all_other_apple_positions)
         self.colliding_apple_i = None

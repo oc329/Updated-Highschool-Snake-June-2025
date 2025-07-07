@@ -17,19 +17,17 @@ if TYPE_CHECKING:
 	from main_menu import Menu  # Import only for type hinting
 
 
-	
-
 class Page(ABC):
-	def __init__(self, menu: 'Menu'):
+	def __init__(self, menu: 'Menu', index_to_insert_transition_boxes = None):
 		## Later defined using set_outer_page method which is called in main
 		## The outer page of a page is reliant on other pages so I don't want to have to define the pages in the order that they rely on pages so I'm using a method to assign a page to the page's outer_page atribtue after initialization
 		self.menu = menu
 		
 		self.outer_page : Page | None = None
-		self.child_pages: dict[str, Page] =  {}
+		self.child_pages: dict[PageName, Page] =  {}
 		self.menu_boxes: list[HighlightableEditableSingleLineTextSurface] = []
 		self.highlighted_menu_box_text_renderer = MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER
-
+		self.index_to_insert_transition_boxes = index_to_insert_transition_boxes
 		self.selected_box_index: int = 0
 
 		self.create_boxes()
@@ -40,6 +38,16 @@ class Page(ABC):
 		Should be called in __init__
 		"""
 		raise NotImplementedError()
+
+	def set_child_pages(self, child_pages_dict: dict[PageName: 'Page']):
+		"""
+		Sets the child pages to the given child pages dict. 
+		Automatically creates the transition page menu boxes
+		Parameters: 
+			-(dict[PageName: 'Page']) child_pages_dict: A dict with Page Names as the keys and Pages as the values
+		"""
+		for page_name, page in child_pages_dict.items():
+			self.add_child_page(page_name, page)
 
 	def add_child_page(self, child_page_name: str, child_page: 'Page'):
 		"""
@@ -101,7 +109,7 @@ class PageWithBoxesCompactedIntoSector(Page):
 		self.layout_manager.position_boxes(self.menu_boxes)
 
 	def _get_layout_manager_based_on_type(self, top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], 
-									   sector_type: AbstractSectorLayoutManager, sector_pos_anchor: AbstractSectorPosAnchor, box_pos_anchor: TextSurfacePosAnchor):
+									   sector_type: AbstractSectorLayoutManager, sector_pos_anchor: AbstractSectorPosAnchor, box_pos_anchor: TextSurfacePosAnchor) -> AbstractSectorLayoutManager:
 		"""
 		Based on the given Sector Type enum. 
 		Returns the corresponding SectorLayoutManager object
@@ -147,10 +155,11 @@ class MainMenuPage(PageWithBoxesCompactedIntoSector):
 		Feeds them dummy positions to be corrected later.
 		"""
 		self.play_box = PlayMenuBox(self, "Play", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
-		self.color_page_transition_box = TransitionMenuBox(PageName.SNAKE_SKIN_SETTINGS, self, "SNAKE COLORS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
-		self.screen_page_transition_box = TransitionMenuBox(PageName.SCREEN_SETTINGS, self, "SCREEN DIMENSIONS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		self.settings_page_transition_box = TransitionMenuBox(PageName.TRANSITION_TO_SETTINGS, self, PageName.TRANSITION_TO_SETTINGS.value, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		# self.color_page_transition_box = TransitionMenuBox(PageName.SNAKE_SKIN_SETTINGS, self, "SNAKE COLORS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		# self.screen_page_transition_box = TransitionMenuBox(PageName.SCREEN_SETTINGS, self, "SCREEN DIMENSIONS", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
 		self.quit_box = QuitProgramMenuBox(self, "QUIT", MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
-		self.menu_boxes = [self.play_box, self.color_page_transition_box, self.screen_page_transition_box, self.quit_box]
+		self.menu_boxes = [self.play_box, self.settings_page_transition_box, self.quit_box]
 
 	def on_enter(self):
 		### Move snake to postiion with the head in the right direction 
@@ -160,7 +169,7 @@ class MainMenuPage(PageWithBoxesCompactedIntoSector):
 		"""
 		Moves the menu snake forward one
 		"""
-		self.menu_snake.move_forward_by_one_until_wall()
+		self.menu_snake.move_forward_by_one_with_teleport_at_wall()
 		
 	def display(self, win: pygame.surface.Surface):
 		"""
@@ -170,6 +179,16 @@ class MainMenuPage(PageWithBoxesCompactedIntoSector):
 		self.title_text_surface.display(win)
 		self.menu_snake.display(win)
 
+class SettingsTransitionPage(PageWithBoxesCompactedIntoSector):
+	def create_boxes(self):
+		"""
+		Creates all the menu boxes for the pages. 
+		Feeds them dummy positions to be corrected later.
+		"""
+		self.color_page_transition_box = TransitionMenuBox(PageName.SNAKE_SKIN_SETTINGS, self, PageName.SNAKE_SKIN_SETTINGS.value, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		self.screen_page_transition_box = TransitionMenuBox(PageName.SCREEN_SETTINGS, self, PageName.SCREEN_SETTINGS.value, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER, pos_anchor = self.box_pos_anchor)
+		self.menu_boxes = [self.color_page_transition_box, self.screen_page_transition_box]
+		
 class ColorSnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 	def __init__(self, snake_skin_manager: AbstractSkinManager, snake_to_edit: MenuSnake, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		self.snake_skin_manager = snake_skin_manager
@@ -193,8 +212,6 @@ class ColorSnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 		
 		lambda_change_color_func = lambda skin = skin: self.snake_to_edit.change_skin(skin)  
 		self.menu_boxes.append(SettingsMenuBoxLambdaTry(lambda_change_color_func, self, skin.name, text_renderer, text_renderer))
-		
-
 
 	def on_enter(self):
 		### Move snake to postiion and set it to static 
@@ -203,7 +220,6 @@ class ColorSnakeSkinsSettingsPage(PageWithBoxesCompactedIntoSector):
 	def display(self, win):
 		super().display(win)
 		self.snake_to_edit.display(win)
-
 
 class ScreenSettingsPage(PageWithBoxesCompactedIntoSector):
 	def __init__(self,  menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
@@ -224,11 +240,11 @@ class BaseMenuBox(HighlightableEditableSingleLineTextSurface):
 		super().__init__(text, display_pos, default_text_renderer, highlighted_text_renderer, pos_anchor)
 		self.page = page
 
-
 	@abstractmethod
 	def on_click(self):
 		"""
-		Method that is called when the user insteracts with the Menu Box
+		Method that is called when the user interacts with the Menu Box.
+		Peforms the action that it's supposed to do 
 		"""
 		raise NotImplementedError()
 
@@ -283,7 +299,6 @@ class SettingsMenuBox(BaseMenuBox):
 		Change the held settings variable to the new data
 		"""
 		self.variable_to_change = self.new_data_for_variable
-
 
 class SettingsMenuBoxLambdaTry(BaseMenuBox):
 	"""
