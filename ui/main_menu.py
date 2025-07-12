@@ -10,7 +10,7 @@ pygame.init()
 
 ### My Modules
 from resource_modules.colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
-from ui.components_of_menu import Arrow, BaseMenuBox, MainMenuPage, Page, SettingsTransitionPage, ScreenSettingsPage, ColorSnakeSkinsSettingsPage
+from ui.components_of_menu import Arrow, AbstractMenuBox, MainMenuPage, Page, SettingsTransitionPage, ScreenSettingsPage, ColorSnakeSkinsSettingsPage
 from resource_modules.enums import PageName, MenuSnakeTeleportationType
 from resource_modules.screen_info import BOTTOM_RIGHT_FIFTH_OF_SCREEN, BOTTOM_MIDDLE_THIRD_OF_SCREEN, MAIN_MENU_PAGE_BOTTOM_RIGHT_POS, MAIN_MENU_PAGE_TOP_LEFT_POS, MAIN_MENU_PAGE_SNAKE_STARTING_GRID_POS, SCREEN_SIZE, TOP_LEFT_FIFTH_OF_SCREEN, TOP_MIDDLE_THIRD_OF_SCREEN
 from snake_game_stuff.skin import color_snake_skin_manager
@@ -67,7 +67,7 @@ class Menu:
         self.set_page_realtionships()
         print(self.settings_transition_page.child_pages)
         ### User Page and Box Sselection
-        self.selected_box : BaseMenuBox = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
+        self.selected_box : AbstractMenuBox = self.active_page.menu_boxes[0] #defined here b/c arrow needs self.selected_box
 
         ### Creating the Arrow Highlighter 
         space_between_arrow_and_box = self.selected_box.get_height() // 8

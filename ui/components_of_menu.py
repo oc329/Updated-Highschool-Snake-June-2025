@@ -231,12 +231,12 @@ class ScreenSettingsPage(PageWithBoxesCompactedIntoSector):
 		test_box = SettingsMenuBox(blank_holder_value, CENTER_OF_SCREEN, self, test_box_text, MENU_BOX_DEFAULT_COLOR_TEXT_RENDERER, MENU_BOX_HIGHLIGHTED_COLOR_TEXT_RENDERER)
 		self.menu_boxes.append(test_box)
 
-class BaseMenuBox(HighlightableEditableSingleLineTextSurface):
+class AbstractMenuBox(HighlightableEditableSingleLineTextSurface):
 	DUMMY_POS = CENTER_OF_SCREEN
 
 	def __init__(self, page: Page, text: str, default_text_renderer: BaseTextRenderer, highlighted_text_renderer: BaseTextRenderer,display_pos: tuple[int, int] = None, pos_anchor: str = TextSurfacePosAnchor.MIDDLE):
 		if display_pos is None:
-			display_pos = BaseMenuBox.DUMMY_POS
+			display_pos = AbstractMenuBox.DUMMY_POS
 		super().__init__(text, display_pos, default_text_renderer, highlighted_text_renderer, pos_anchor)
 		self.page = page
 
@@ -248,7 +248,7 @@ class BaseMenuBox(HighlightableEditableSingleLineTextSurface):
 		"""
 		raise NotImplementedError()
 
-class TransitionMenuBox(BaseMenuBox):
+class TransitionMenuBox(AbstractMenuBox):
 	"""
 	Subclass of MenuBox.
 	Transitions to another page when iteracted with.
@@ -264,7 +264,7 @@ class TransitionMenuBox(BaseMenuBox):
 		target_page = self.page.child_pages[self.target_page_name]
 		self.page.menu.change_page(target_page)
 
-class PlayMenuBox(BaseMenuBox):
+class PlayMenuBox(AbstractMenuBox):
 	"""
 	Subclass of MenuBox.
 	MenuBox that starts the game when clicked
@@ -275,14 +275,14 @@ class PlayMenuBox(BaseMenuBox):
 		"""
 		self.page.menu.start_game()
 
-class QuitProgramMenuBox(BaseMenuBox):
+class QuitProgramMenuBox(AbstractMenuBox):
 	def on_click(self):
 		"""
 		Closes the program application 
 		"""
 		quit_program()
 
-class SettingsMenuBox(BaseMenuBox):
+class SettingsMenuBox(AbstractMenuBox):
 	"""
 	Subclass of MenuBox.
 	For MenuBoxes that alter a game setting variable.
@@ -300,7 +300,7 @@ class SettingsMenuBox(BaseMenuBox):
 		"""
 		self.variable_to_change = self.new_data_for_variable
 
-class SettingsMenuBoxLambdaTry(BaseMenuBox):
+class SettingsMenuBoxLambdaTry(AbstractMenuBox):
 	"""
 	Subclass of MenuBox.
 	For MenuBoxes that alter a game setting variable.
@@ -327,7 +327,7 @@ class Arrow:
 		self.space_btw_box_and_arrow = space_btw_box_and_arrow
 		self.side_of_box = side_of_box
 
-		self.selected_box: BaseMenuBox = self.menu.selected_box
+		self.selected_box: AbstractMenuBox = self.menu.selected_box
 		ratio_of_arrow_to_screen = 20
 		self.width, self.height = ARROW_SIZE
 		# self.width = (SCREEN_WIDTH // ratio_of_arrow_to_screen)
@@ -367,7 +367,7 @@ class Arrow:
 		"""
 		self.selected_box = self.menu.selected_box
 
-	def change_box(self, new_box: BaseMenuBox):
+	def change_box(self, new_box: AbstractMenuBox):
 		"""
 		Changes which box the arrow points to.
 		"""

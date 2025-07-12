@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 
 class Apple: 
     def __init__(self):
-        random_column, random_row = self.__get_random_grid_pos()
         self.grid_pos = self.__get_random_grid_pos()
         self.dipslay_pos = convert_grid_pos_to_display_pos(self.grid_pos)
         ## Sets apple's grid position to a random row and and column in the game grid

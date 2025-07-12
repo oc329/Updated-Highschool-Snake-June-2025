@@ -59,7 +59,7 @@ class AbstractSnake(ABC):
         the new direction isn't a Direction Enum.
         """
         if not isinstance(new_direction, Direction):
-            return ValueError("Should be valid Direction Enum")
+            raise ValueError("Should be valid Direction Enum")
     
     def change_direction(self, new_direction_enum: Direction):
         """
@@ -74,7 +74,7 @@ class AbstractSnake(ABC):
         new_column_direction, new_row_direction = new_direction_enum.value
         
         ## Not changing direction if it's the same or in the opposite dir (not possible in snake)
-        if old_column_direction == abs(new_column_direction) or old_row_direction == abs(new_row_direction):
+        if abs(old_column_direction) == abs(new_column_direction) or abs(old_row_direction) == abs(new_row_direction):
             return
         self.direction = (new_direction_enum.value)
 
@@ -186,16 +186,17 @@ class MenuSnake(AbstractSnake):
     
     @teleportation_type.setter
     def teleportation_type(self, new_type):
-        if not isinstance(new_type, MenuSnakeTeleportationType):
+        if new_type not in MenuSnakeTeleportationType:
             raise ValueError("Expected MenuSnakeTeleportationType enum")
         self._teleportation_type = new_type
         self._teleport_method = self.teleport_enum_to_method[new_type]
         
     def change_pos(self, new_snake_head_grid_pos: tuple[int, int]): 
         """
-        Teleports the snake to the given grid position. Keeps the direction going the same
-        
+        Teleports the snake head to the new grid position and 
+        realigns the body in the current direction.
         """
+
         self.segment_grid_positions[0] = new_snake_head_grid_pos    #Assigns new coordinates to snake head
         ## Helps positiion the snake body behind the snake
         column_offset, row_offset = self.direction

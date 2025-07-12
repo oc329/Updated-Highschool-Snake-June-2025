@@ -1,5 +1,5 @@
 from enum import Enum, auto
-
+from abc import abstractmethod
 class Direction(Enum):
     """
     Enum that holds the snake tuple e.g (1, 0) of the row and column direction.
@@ -22,9 +22,9 @@ class PageName(Enum):
     SNAKE_SKIN_SETTINGS = 'Snake Skins'
     SCREEN_SETTINGS = 'Screen Settings'
 
-class SectorType(Enum):
-    VERTICAL = 'vertical'
-    HORIZONTAL = 'horizontal'
+class Layout(Enum):
+    HORIZONTAL = auto()
+    VERTICAL = auto()
 
 class TextSurfacePosAnchor(Enum):
     START = 'start'
@@ -36,15 +36,44 @@ class AbstractSectorPosAnchor(Enum):
     Describes where to position the Menu boxes
     within the sector 
     """
-    pass
+    def calculate_axis_value(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> int:
+        raise NotImplementedError
+        
 
 class HorizontalSectorPosAnchor(AbstractSectorPosAnchor): 
-    TOP = 'top'
-    MIDDLE = 'middle' 
-    BOTTOM = 'bottom'
+    TOP = auto()
+    MIDDLE = auto()
+    BOTTOM = auto()
+
+    def calculate_axis_value(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> int:
+        top_y, bottom_y = top_left[1], bottom_right[1]
+        match self:
+            case HorizontalSectorPosAnchor.TOP:
+                return top_y
+            case HorizontalSectorPosAnchor.MIDDLE:
+                return (top_y + bottom_y) // 2
+            case HorizontalSectorPosAnchor.BOTTOM:
+                return bottom_y
+
 
 class VerticalSectorPosAnchor(AbstractSectorPosAnchor): 
-    LEFT = 'left'
-    MIDDLE = 'middle' 
-    RIGHT = 'right'
+    LEFT = auto()
+    MIDDLE = auto()
+    RIGHT = auto()
+
+    def calculate_axis_value(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> int:
+        left_x, right_x = top_left[0], bottom_right[0]
+        match self:
+            case VerticalSectorPosAnchor.LEFT:
+                return left_x
+            case VerticalSectorPosAnchor.MIDDLE:
+                return (left_x + right_x) // 2
+            case VerticalSectorPosAnchor.RIGHT:
+                return right_x
+
+
+
+class OnePointLayout(Enum): 
+    HORIZONTAL = auto()
+    VERTICAL = auto()
 

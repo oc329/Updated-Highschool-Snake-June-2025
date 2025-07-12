@@ -1,94 +1,67 @@
 from abc import ABC, abstractmethod
 
-from ui.page_layout_managers.abstract_layout_manager import AbstractLayoutManager
-from resource_modules.enums import SectorType, HorizontalSectorPosAnchor, TextSurfacePosAnchor, VerticalSectorPosAnchor
+from ui.page_layout_managers.abstract_layout_manager import AbstractTwoPointLayoutManager
+from resource_modules.enums import AbstractSectorPosAnchor, Layout, HorizontalSectorPosAnchor, TextSurfacePosAnchor, VerticalSectorPosAnchor
 
-class AbstractSectorLayoutManager(AbstractLayoutManager):
+class AbstractSectorLayoutManager(AbstractTwoPointLayoutManager):
     def __init__(self, top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int],
-                sector_type = SectorType.VERTICAL, sector_pos_anchor = VerticalSectorPosAnchor.MIDDLE, box_pos_anchor = TextSurfacePosAnchor.MIDDLE):
+                layout: Layout, sector_pos_anchor = AbstractSectorPosAnchor, box_pos_anchor = TextSurfacePosAnchor.MIDDLE):
         """
         Sector Layout Managers position the boxes within the sector based on the sector position anchor. 
 
         Parameters: 
             - (tuple[int, int]) top_left_pos: The top left position of the sector
             - (tuple[int, int]) bottom_right_pos: The bottom right position of the sector
-            - (SectorType) sector_type: The sector type (horizontal, vertical, etc) determines how the boxes are displayed in the boxes list
+            - (Layout) layout: The layout Enum (Vertical or Horizontal) determines how the boxes are positioned
             - (AbstractSectorPosAnchor) sector_pos_anchor: The string enum value that tells where on the sector the boxes should be displayed (ex. MIDDLE)
             - (TextSurfacePosAnchor) box_pos_anchor: The anchor that tells the box how it should be displayed in relation to its display pos (start, end, middle)
         """
         self.top_left_pos = top_left_pos
         self.bottom_right_pos = bottom_right_pos 
-        self.sector_type = sector_type
         self.sector_pos_anchor = sector_pos_anchor
         self.box_pos_anchor = box_pos_anchor
+        super().__init__(layout)
 
-    @property
-    def top_of_sector_y(self) -> int:
+    def get_anchor_axis_value(self) -> int:
         """
-        Returns the y coordinate of the top of the sector
+        Calculates the axis value for each menu box based on the sector boundaries.
         """
-        return self.top_left_pos[1]
-        
-    def ensure_there_are_boxes(self, boxes: list):
-        """
-        Raises an error if thee menu boxes list is empty. 
-        
-        Parameters: 
-            - (list) boxes: The list of menu boxes on the page
-        """
-        if not boxes:
-            raise IndexError("Page has no menu boxes; cannot select a box.")
-    
+        return self.sector_pos_anchor.calculate_axis_value(self.top_left_pos, self.bottom_right_pos)
+
+    @abstractmethod
+    def get_spacing(self, boxes): ...
+
 class VerticalSectorLayoutManager(AbstractSectorLayoutManager):
     def __init__(self, top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], 
-                sector_pos_anchor = VerticalSectorPosAnchor.MIDDLE, box_pos_anchor = TextSurfacePosAnchor.MIDDLE):
-        super().__init__(top_left_pos, bottom_right_pos, SectorType.VERTICAL, sector_pos_anchor, box_pos_anchor)
+                sector_pos_anchor: VerticalSectorPosAnchor = VerticalSectorPosAnchor.MIDDLE, box_pos_anchor: TextSurfacePosAnchor = TextSurfacePosAnchor.MIDDLE):
+        super().__init__(top_left_pos, bottom_right_pos, Layout.VERTICAL, sector_pos_anchor, box_pos_anchor)
 
-    def ensure_boxes_fit_in_vertical_sector(self, boxes: list):
-        box_height = boxes[0].get_height()
-        num_boxes = len(boxes)
-        min_sector_height = num_boxes * box_height 
+    def get_spacing(self, boxes):
+        return (self.bottom_right_pos[1] - self.top_left_pos[1]) // len(boxes)
+        
+    def ensure_boxes_can_fit(self, boxes: list):
+        """
+        Ensures the combined box height is less than the sector height
+        """
+        self.ensure_boxes_can_fit_btw_points(boxes)#
+        combined_box_height = self.get_combined_box_height(boxes)
         ## graphics are in 4th sector so y is greater lower down
         sector_height = self.bottom_right_pos[1] - self.top_left_pos[1]
 
-        if min_sector_height > sector_height:
+        if combined_box_height > sector_height:
             raise ValueError(f"Boxes do not fit vertically in sector. "
-                            f"Sector height: {sector_height}, required: {min_sector_height}")
-
-    def get_menu_box_x(self) -> int:
-        """
-        Returns the x coordinate of each menu box in the sector 
-        based on the position anchor and the top left position.
-        From top left pos, how much to add: left is 0, Middle is half the sector width, and right is sector width
-
-        Returns: 
-            - The x coordinate of each menu box
-        """
-        if self.sector_pos_anchor == VerticalSectorPosAnchor.LEFT:
-            menu_box_x = self.top_left_pos[0]
-        elif self.sector_pos_anchor == VerticalSectorPosAnchor.MIDDLE:
-            ## y is in 4th quad so y increases as you go lower
-            half_of_sector_width = self.top_left_pos[0] + (self.bottom_right_pos[0] - self.top_left_pos[0]) // 2
-            menu_box_x = half_of_sector_width
-        elif self.sector_pos_anchor == VerticalSectorPosAnchor.RIGHT:
-            sector_width = self.top_left_pos[0] + (self.bottom_right_pos[0] - self.top_left_pos[0])
-            menu_box_x = sector_width
-        else: 
-            raise ValueError("Given Vertical Sector Anchor Position isn't valid")
+                            f"Sector height: {sector_height}, required: {combined_box_height}")
         
-        return menu_box_x
-
     def position_boxes(self, boxes: list):
         self.ensure_there_are_boxes(boxes)
-        box_height = boxes[0].get_height()
-        self.ensure_boxes_fit_in_vertical_sector(boxes)
+        self.ensure_boxes_can_fit(boxes)
 
-        bottom_y, top_y = self.bottom_right_pos[1], self.top_left_pos[1]
-        display_interval = (bottom_y - top_y) // len(boxes)
-        menu_box_x = self.get_menu_box_x()
+        top_y = self.top_left_pos[1]
+        spacing = self.get_spacing(boxes)
+        menu_box_x = self.get_anchor_axis_value()
         for box_i, box in enumerate(boxes):
             box.change_pos_anchor(self.box_pos_anchor)
-            pos = (menu_box_x, top_y + display_interval * box_i)
+            pos = (menu_box_x, top_y + spacing * box_i)
             box.change_pos(pos)
 
 class HorizontalSectorLayoutManager(AbstractSectorLayoutManager):
@@ -96,64 +69,33 @@ class HorizontalSectorLayoutManager(AbstractSectorLayoutManager):
     Positions the menu boxes horizontally from left to right
     """
     def __init__(self, top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], 
-                sector_pos_anchor = HorizontalSectorPosAnchor.TOP, box_pos_anchor = TextSurfacePosAnchor.START):
-        super().__init__(top_left_pos, bottom_right_pos, SectorType.HORIZONTAL, sector_pos_anchor, box_pos_anchor)
+                sector_pos_anchor: HorizontalSectorPosAnchor = HorizontalSectorPosAnchor.TOP, box_pos_anchor: TextSurfacePosAnchor = TextSurfacePosAnchor.START):
+        super().__init__(top_left_pos, bottom_right_pos, Layout.HORIZONTAL, sector_pos_anchor, box_pos_anchor)
     
-    def _calculate_combined_boxes_width(self, boxes: list):
-        """
-        Adds up the width of each box and 
-        returns the combined width of all the boxes in the given boxes list.
-
-        Parameter: 
-            - (list) boxes: List of all the menu boxes on the page
-        """
-        return sum(box.get_width() for box in boxes)
-     
-    def ensure_boxes_fit_in_horizontal_sector(self, boxes: list):
-        min_sector_width = self._calculate_combined_boxes_width(boxes)
+    def get_spacing(self, boxes): 
+        return (self.bottom_right_pos[0] - self.top_left_pos[0]) // len(boxes)
+    
+    def ensure_boxes_can_fit(self, boxes: list):
+        min_sector_width = self.get_combined_box_width(boxes)
         sector_width = self.bottom_right_pos[0] - self.top_left_pos[0]
 
         if min_sector_width > sector_width:
             raise ValueError(f"Boxes do not fit horizontally in sector. "
                             f"Sector width: {sector_width}, required: {min_sector_width}")
-        
-    def get_menu_box_y(self) -> int:
-        """
-        Returns the t coordinate of each menu box in the sector 
-        based on the position anchor and the top left position.
-        From top left pos, how much to add to y: top is 0, middle is half the sector height, and bottom is sector height
 
-        Returns: 
-            - The y coordinate of each menu box
-        """
-        if self.sector_pos_anchor == HorizontalSectorPosAnchor.TOP:
-            menu_box_y = self.top_left_pos[1]
-        elif self.sector_pos_anchor == HorizontalSectorPosAnchor.MIDDLE:
-            half_of_sector_height = self.top_left_pos[1] + (self.bottom_right_pos[1] - self.top_left_pos[1]) // 2
-            menu_box_y = half_of_sector_height
-        elif self.sector_pos_anchor == HorizontalSectorPosAnchor.BOTTOM:
-            sector_height = self.top_left_pos[1] + (self.top_left_pos[1] - self.bottom_right_pos[1])
-            menu_box_y = sector_height
-        else:
-            raise ValueError("Invalid Horizontal Sector Anchor")
-        
-        return menu_box_y
-    
     def position_boxes(self, boxes: list):
         """
         Positions the page's menu boxes into the horizontal sector.
         Raises an error if the combined menu boxes' width is greater than the sector width. 
         """
         self.ensure_there_are_boxes(boxes)
-        self.ensure_boxes_fit_in_horizontal_sector(boxes)
-        display_interval = (self.bottom_right_pos[0] - self.top_left_pos[0]) // len(boxes)
-        menu_box_y = self.get_menu_box_y()
+        self.ensure_boxes_can_fit(boxes)
+
+        spacing = self.get_spacing(boxes)
+        left_x = self.top_left_pos[0]
+        menu_box_y = self.get_anchor_axis_value()
+
         for box_i, box in enumerate(boxes):
-            box.change_pos_anchor(self.box_pos_anchor
-            )
-            pos = (self.top_left_pos[0] + display_interval * box_i, menu_box_y)
+            box.change_pos_anchor(self.box_pos_anchor)
+            pos = (left_x + spacing * box_i, menu_box_y)
             box.change_pos(pos)
-
-
-class CenterSectorLayoutManager(AbstractSectorLayoutManager):
-    pass

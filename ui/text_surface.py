@@ -65,7 +65,7 @@ class BaseTextSurface(ABC):
         ensure_pos_is_on_screen(new_display_pos)
         self.display_pos = new_display_pos
 
-    def change_pos_anchor(self, new_pos_anchor: str):
+    def change_pos_anchor(self, new_pos_anchor: TextSurfacePosAnchor):
         """
         Changes the position anchor and 
         updates the display position accordingly.

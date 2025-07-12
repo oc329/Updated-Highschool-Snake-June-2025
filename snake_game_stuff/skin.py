@@ -83,7 +83,7 @@ class SnakeColorSkin(AbstractColorSkin, SnakeSkinMixin):
         super().__init__(name, colors, is_retro)
         self.set_segment_size(CELL_WIDTH, CELL_HEIGHT)
 
-    def display(self, win: Surface, positions: Iterable[tuple[int, int]], direction = None):
+    def display(self, win: Surface, positions: Iterable[tuple[int, int]]):
         for seg_i, grid_pos in enumerate(positions):
             if not grid_pos_is_on_screen(grid_pos):
                 continue  # Skip drawing off-screen segments
@@ -126,7 +126,7 @@ class SnakeImageSkin(AbstractSkin, SnakeSkinMixin):
     def change_current_direction_head_img(self, direction: Direction):
         self.current_head_direction_img = self.head_images_by_direction[direction] 
 
-    def display(self, win: Surface, positions: Iterable[tuple[int, int]], direction: Direction = None):
+    def display(self, win: Surface, positions: Iterable[tuple[int, int]], direction: Direction):
         self.change_current_direction_head_img(direction)
         if grid_pos_is_on_screen(positions[0]):
             win.blit(self.current_head_direction_img, self.get_segment_rect(positions[0]))
@@ -155,9 +155,14 @@ class AbstractSkinManager(ABC):
 
     def get_skin(self, target_name: str) -> AbstractSkin:
         """
-        Returns the Skin object that has the given name
+        Returns the Skin object that has the given name.
+        Raises a ValueError if no skin with the given name is found.
         """
-        return next((skin for skin in self.skins if skin.name == target_name), None)
+        for skin in self.skins:
+            if skin.name == target_name:
+                return skin
+        raise ValueError(f"No skin found with name '{target_name}'")
+
     
     def get_all_skins(self) -> list[AbstractSkin]:
         """

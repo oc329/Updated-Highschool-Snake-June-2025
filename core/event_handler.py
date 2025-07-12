@@ -46,6 +46,7 @@ class AbstractEventHandler(ABC):
         for event in pygame.event.get():
             if event.type in (pygame.KEYDOWN, pygame.KEYUP):
                 if event.key in self.key_states:
+                    #print(pygame.key.name(event.key))
                     is_pressed = (event.type == pygame.KEYDOWN)
                     self.key_states[event.key] = is_pressed
             elif event.type == pygame.QUIT:
@@ -59,7 +60,6 @@ class MainMenuEventHamdler(AbstractEventHandler):
             pygame.K_DOWN,
             pygame.K_RETURN,
             pygame.K_ESCAPE,
-
         )
         super().__init__(keys_to_track)
 
@@ -73,24 +73,64 @@ class GameLoopEventHandler(AbstractEventHandler):
             pygame.K_LEFT,
             pygame.K_RIGHT,
         )
+        self._last_direction_pressed: Direction | None = None
+        self._held_direction_stack: list[Direction] = []
+        self.key_to_direction = {
+        pygame.K_UP: Direction.UP,
+        pygame.K_DOWN: Direction.DOWN,
+        pygame.K_LEFT: Direction.LEFT,
+        pygame.K_RIGHT: Direction.RIGHT,
+        }
         super().__init__(keys_to_track)
     
-    
+    def arrow_key_to_direction(self, key: int):
+        """
+        Converts the arrow given arrow key pressed to the corresponding snake Direction 
+        """
+        print(key)
+        if key not in self._keys_to_track: 
+            raise ValueError("Non arrow key given")
+        
+        return self.key_to_direction[key]
+    def record_input(self):
+        """
+        Updates key_states based on KEYDOWN/KEYUP events.
+        """
+        for event in pygame.event.get():
+            if event.type in (pygame.KEYDOWN, pygame.KEYUP):
+                if event.key in self.key_states:
+                    #print(pygame.key.name(event.key))
+                    is_pressed = (event.type == pygame.KEYDOWN)
+                    self.key_states[event.key] = is_pressed
+                    direction = self.arrow_key_to_direction(event.key)
+                    if is_pressed:
+                        self._held_direction_stack.append(direction)
+                    else: 
+                        self._held_direction_stack.remove(direction)
+
+                     
+            elif event.type == pygame.QUIT:
+                quit_program()
+
+
     def direction_key_pressed(self) -> Direction | None:
         """
         Returns the Direction of the currently pressed arrow key.
         The direction is the Direction enum.
         If no arrow key is pressed, returns None.
         """
-
-        if self.right_arrow_key_is_pressed:
-            return Direction.RIGHT
-        elif self.left_arrow_key_is_pressed:
-            return Direction.LEFT
-        elif self.up_arrow_key_is_pressed:
-            return Direction.UP
-        elif self.down_arrow_key_is_pressed:
-            return Direction.DOWN
+        print(self._held_direction_stack)
+        if self._held_direction_stack:
+            return self._held_direction_stack[-1]
+        return None
+        # if self.right_arrow_key_is_pressed:
+        #     return Direction.RIGHT
+        # elif self.left_arrow_key_is_pressed:
+        #     return Direction.LEFT
+        # elif self.up_arrow_key_is_pressed:
+        #     return Direction.UP
+        # elif self.down_arrow_key_is_pressed:
+        #     return Direction.DOWN
         return None
 
 
