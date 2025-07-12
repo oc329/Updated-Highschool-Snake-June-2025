@@ -22,6 +22,15 @@ class PageName(Enum):
     SNAKE_SKIN_SETTINGS = 'Snake Skins'
     SCREEN_SETTINGS = 'Screen Settings'
 
+class LayoutMangerTypes(Enum):
+    """
+    Enum for the different layout manager types.
+    """
+    ONE_POINT = auto()
+    TWO_POINT = auto()
+    VERTICAL_SECTOR = auto()
+    HORIZONTAL_SECTOR = auto()
+
 class Layout(Enum):
     HORIZONTAL = auto()
     VERTICAL = auto()

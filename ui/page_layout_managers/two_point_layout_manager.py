@@ -11,11 +11,10 @@ class TwoPointLayoutManager(AbstractTwoPointLayoutManager):
     Raises a ValueError if they don't
     """
     def __init__(self, point1: tuple[int, int], point2: tuple[int, int]):
-        self.ensure_points_share_one_axis(point1, point2) 
+        self.ensure_points_are_valid(point1, point2) 
         self.point1 = point1
         self.point2 = point2
         super().__init__(self.get_layout())
-        
         
     def get_layout(self) -> Layout:
         """
@@ -28,9 +27,18 @@ class TwoPointLayoutManager(AbstractTwoPointLayoutManager):
             return Layout.HORIZONTAL
         else: 
             raise ValueError("Points should share a common axis. x or y should be the same"
-                             f"point1 = {self.point1} point2 = {self.point2}")
-                             
+                             f"point1 = {self.point1} point2 = {self.point2}")                        
     
+    def ensure_points_are_valid(self):
+        """
+        Ensures the points are valid for this layout manager.
+        Specifically, it checks that both points share the same axis and aren't the same.
+        Raises ValueError if they are not.
+        """
+        if self.point1 == self.point2:
+            raise ValueError("Points cannot be the same. point1 = point2 = {self.point1}")
+        self.ensure_points_share_one_axis(self.point1, self.point2)
+
     @staticmethod
     def ensure_points_share_one_axis(point1: tuple[int, int], point2: tuple[int, int]):
         """
