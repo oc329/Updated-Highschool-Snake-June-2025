@@ -109,6 +109,11 @@ class AbstractSnake(ABC):
         self.skin.display(win,self.segment_grid_positions, self.direction)
         
 class GameSnake(AbstractSnake): 
+    """
+    Represents the snake in the game.
+    Handles movement, growth, and collision logic.
+    """
+
     def calculate_game_score_from_length(self) -> int:
         """
         Calculates the current score in the game based on this snake's 
@@ -171,6 +176,10 @@ class GameSnake(AbstractSnake):
 
 
 class MenuSnake(AbstractSnake):
+    """
+    MenuSnake be controlled by the player but can be used to display the snake in the menu.
+    Can teleport and wrap around the screen. 
+    """
     def __init__(self, starting_head_grid_pos: tuple[int, int], teleportation_type: MenuSnakeTeleportationType, starting_direction = Direction.RIGHT.value, starting_length = 5):
         super().__init__(starting_head_grid_pos, starting_direction,starting_length)
         
@@ -195,6 +204,7 @@ class MenuSnake(AbstractSnake):
         """
         Teleports the snake head to the new grid position and 
         realigns the body in the current direction.
+        Used for displaying the snake skin in the menu.
         """
 
         self.segment_grid_positions[0] = new_snake_head_grid_pos    #Assigns new coordinates to snake head
