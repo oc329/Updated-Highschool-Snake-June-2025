@@ -52,11 +52,19 @@ class BaseTextRenderer(ABC):
 		Returns the height of a character in this text settings' font
 		"""
 		return self.text_settings.font.get_height()
+	
+	def get_char_width(self) -> int:
+		"""
+		Returns the standard width of a character in this text settings' font object
+		"""
+		return self.text_settings.font.size("A")[0]
+	
 	def get_font(self) -> Font:
 		"""
 		Returns this renderer's text settings' font object
 		"""
 		return self.text_settings.font
+	
 @dataclass (frozen = True)
 class TextRendererWithSingleColor(BaseTextRenderer):
 	color: tuple[int, int, int]

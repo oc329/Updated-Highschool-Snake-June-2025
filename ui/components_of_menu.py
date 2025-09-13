@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 pygame.init()
 
 from resource_modules.colors import ARROW_COLOR, RAINBOW_SNAKE_COLORS
-from resource_modules.enums import AbstractSectorPosAnchor, Direction, HorizontalSectorPosAnchor, PageName, SectorType, TextSurfacePosAnchor, VerticalSectorPosAnchor
+from resource_modules.enums import AbstractSectorPosAnchor, Direction, HorizontalSectorPosAnchor, Layout, PageName, TextSurfacePosAnchor, VerticalSectorPosAnchor
 from core.event_handler import quit_program
 from ui.page_layout_managers.sector_layout_manager import AbstractSectorLayoutManager, HorizontalSectorLayoutManager, VerticalSectorLayoutManager
 from snake_game_stuff.skin import AbstractSkinManager, SnakeColorSkin
@@ -100,7 +100,7 @@ class PageWithBoxesCompactedIntoSector(Page):
 	the menu boxes into a vertical list between the passed start and end pos. 
 	"""
 	def __init__(self, menu: 'Menu', top_left_pos: tuple[int, int], bottom_right_pos: tuple[int, int], box_pos_anchor = TextSurfacePosAnchor.MIDDLE,
-			  sector_pos_anchor: AbstractSectorPosAnchor = VerticalSectorPosAnchor.MIDDLE, sector_type = SectorType.VERTICAL): 
+			  sector_pos_anchor: AbstractSectorPosAnchor = VerticalSectorPosAnchor.MIDDLE, sector_type = Layout.VERTICAL): 
 		
 		self.layout_manager = self._get_layout_manager_based_on_type(top_left_pos, bottom_right_pos, sector_type, sector_pos_anchor, box_pos_anchor)
 		self.box_pos_anchor = box_pos_anchor
@@ -114,12 +114,12 @@ class PageWithBoxesCompactedIntoSector(Page):
 		Based on the given Sector Type enum. 
 		Returns the corresponding SectorLayoutManager object
 		"""
-		if sector_type is SectorType.VERTICAL: 
+		if sector_type is Layout.VERTICAL: 
 			layout_manager = VerticalSectorLayoutManager(top_left_pos, bottom_right_pos, sector_pos_anchor, box_pos_anchor)
-		elif sector_type is SectorType.HORIZONTAL: 
+		elif sector_type is Layout.HORIZONTAL: 
 			layout_manager = HorizontalSectorLayoutManager(top_left_pos, bottom_right_pos, sector_pos_anchor, box_pos_anchor)
 		else:
-			raise ValueError("Sector type should be a valid SectorType Enum")
+			raise ValueError("Sector type should be a valid Layout Enum")
 		
 		return layout_manager
 	

@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from abc import abstractmethod
+
 class Direction(Enum):
     """
     Enum that holds the snake tuple e.g (1, 0) of the row and column direction.
@@ -40,6 +41,33 @@ class TextSurfacePosAnchor(Enum):
     MIDDLE = 'middle'
     END = 'end'
 
+# class BoxPosAnchor(TextSurfacePosAnchor):
+#     """
+#     Inherits from TextSurfacePosAnchor. Has functioanlity to calcualte box pos based on given point
+#     """
+#     def calculate_box_pos(self, point: tuple[int, int], text_width: int) -> tuple[int, int]:
+#         """
+#         Calculates the top-left position of the box based on the anchor pointand the given point.
+
+#         Parameters:
+#             - point: The reference point (x, y)
+#             - text_width (int): The width of the menu box's text 
+#             - box_height: The height of the box
+
+#         Returns:
+#             - A tuple representing the top-left position (x, y) of the box.
+#         """
+#         match self:
+#             case BoxPosAnchor.START:
+#                 return (point[0], point[1])
+#             case BoxPosAnchor.MIDDLE:
+#                 return (point[0] - box_width // 2, point[1])
+#             case BoxPosAnchor.END:
+#                 return (point[0] + box_width, point[1])
+#             case _:
+#                 raise ValueError(f"Invalid BoxPosAnchor: {self}")
+
+    
 class AbstractSectorPosAnchor(Enum):
     """
     Describes where to position the Menu boxes
@@ -62,8 +90,8 @@ class HorizontalSectorPosAnchor(AbstractSectorPosAnchor):
             case HorizontalSectorPosAnchor.MIDDLE:
                 return (top_y + bottom_y) // 2
             case HorizontalSectorPosAnchor.BOTTOM:
-                return bottom_y
-
+                return bottom_y 
+            
 
 class VerticalSectorPosAnchor(AbstractSectorPosAnchor): 
     LEFT = auto()
@@ -79,7 +107,6 @@ class VerticalSectorPosAnchor(AbstractSectorPosAnchor):
                 return (left_x + right_x) // 2
             case VerticalSectorPosAnchor.RIGHT:
                 return right_x
-
 
 
 class OnePointLayout(Enum): 

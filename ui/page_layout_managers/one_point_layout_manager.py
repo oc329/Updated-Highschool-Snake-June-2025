@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from ui.page_layout_managers.abstract_layout_manager import AbstractLayoutManager
 from resource_modules.screen_info import SCREEN_WIDTH, SCREEN_HEIGHT, MENU_BOX_DEFAULT_FONT_SIZE
-from resource_modules.enums import TextSurfacePosAnchor, OnePointLayout
+from resource_modules.enums import TextSurfacePosAnchor, Layout
 
 
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ class OnePointLayoutManager(AbstractLayoutManager):
     """
     Layout manager that centers the Menu boxes around a point. 
     """
-    def __init__(self, point: tuple[int, int], layout: OnePointLayout = OnePointLayout.VERTICAL):
+    def __init__(self, point: tuple[int, int], layout: Layout = Layout.VERTICAL):
         """
         Parameters: 
             - point: The point to horizontally and vertically center the menu boxes around
@@ -30,7 +30,7 @@ class OnePointLayoutManager(AbstractLayoutManager):
         return sum(box.get_width() for box in boxes) + self.spacing * len(boxes) - 1
     
     def ensure_boxes_can_fit(self, boxes: list['AbstractMenuBox']):
-        if self.layout == OnePointLayout.VERTICAL: 
+        if self.layout == self.is_vertical(): 
             half_of_combined_height = self.get_combined_box_height(boxes) // 2 
             point_y = self.point_to_center_on[1]
             top_of_all_boxes_y = point_y + half_of_combined_height
@@ -38,7 +38,7 @@ class OnePointLayoutManager(AbstractLayoutManager):
             if bottom_of_all_boxes_y < 0 or top_of_all_boxes_y > SCREEN_HEIGHT:
                 raise ValueError("Boxes do not fit vertically around point."
                                  f"End of boxes y = {self.top_of_all_boxes_y}. Point = {self.point_to_center_on}")
-        if self.layout == OnePointLayout.HORIZONTAL: 
+        if self.layout == self.is_horizontal: 
             half_of_combined_height = self.get_combined_box_height(boxes) // 2 
             point_y = self.point_to_center_on[1]
             top_of_all_boxes_y = point_y + half_of_combined_height
@@ -46,11 +46,13 @@ class OnePointLayoutManager(AbstractLayoutManager):
             if bottom_of_all_boxes_y < 0 or top_of_all_boxes_y > SCREEN_HEIGHT:
                 raise ValueError("Boxes do not fit vertically around point."
                                  f"End of boxes y = {self.top_of_all_boxes_y}. Point = {self.point_to_center_on}")
+            
     def position_boxes(self, boxes: list['AbstractMenuBox']):
+        self.ensure_there_are_boxes(boxes)
         self.ensure_boxes_can_fit(boxes)
         spacing = 10  # Pixels between each box
 
-        if self.layout == OnePointLayout.VERTICAL:
+        if self.is_vertical():
             # Compute total height (boxes + spacing)
             total_height = sum(box.get_height() for box in boxes) + spacing * (len(boxes) - 1)
             start_y = self.point_to_center_around[1] - total_height // 2
@@ -62,7 +64,7 @@ class OnePointLayoutManager(AbstractLayoutManager):
                 current_y += box.get_height() + spacing
                 box.change_pos_anchor(TextSurfacePosAnchor.MIDDLE)
 
-        elif self.layout == OnePointLayout.HORIZONTAL:
+        elif self.is_horizontal():
             # Compute total width (boxes + spacing)
             total_width = sum(box.get_width() for box in boxes) + spacing * (len(boxes) - 1)
             start_x = self.point_to_center_around[0] - total_width // 2
@@ -71,8 +73,8 @@ class OnePointLayoutManager(AbstractLayoutManager):
             current_x = start_x
             for box in boxes:
                 box.change_display_pos((current_x, center_y))
-
+                box.ch
                 current_x += box.get_width() + spacing
-
         else:
             raise ValueError(f"Unsupported layout: {self.layout}")
+    

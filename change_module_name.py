@@ -36,7 +36,6 @@ def old_update_imports():
 
 old_update_imports()
 # import re
-# from pathlib import Path
 
 # # Root directory of your project
 # PROJECT_ROOT = Path(os.getcwd()).resolve()
