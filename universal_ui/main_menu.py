@@ -8,7 +8,6 @@ pygame.init()
 
 
 
-
 ### My Modules
 from resource_modules.colors import RAINBOW_SNAKE_COLORS_NAME_TO_RGB_LOOKUP
 from ui.components_of_menu import Arrow, AbstractMenuBox, MainMenuPage, Page, SettingsTransitionPage, ScreenSettingsPage, ColorSnakeSkinsSettingsPage
@@ -41,6 +40,7 @@ class Menu:
         self.snake_colors_settings_page = ColorSnakeSkinsSettingsPage(color_snake_skin_manager, self.menu_snake, self, TOP_LEFT_FIFTH_OF_SCREEN, SCREEN_SIZE)
         
         self.active_page = self.main_menu_page
+
         self.page_hierarchy = {
             PageName.MAIN_MENU: 
             {
@@ -50,16 +50,12 @@ class Menu:
                     PageName.TRANSITION_TO_SETTINGS :
                     {
                         "Page": self.settings_transition_page, 
-                        "Children": 
-                        {
-                            PageName.SNAKE_SKIN_SETTINGS :
-                            { 
-                                self.snake_colors_settings_page
-                            },
+                        "Children": {
+                            PageName.SNAKE_SKIN_SETTINGS :{
                             "Page": self.snake_colors_settings_page, 
-                            "Children": {},
-                            PageName.SCREEN_SETTINGS: 
-                            {
+                            "Children": {}
+                            },
+                            PageName.SCREEN_SETTINGS: {
                                 "Page": self.screen_settings_page, 
                                 "Children" : {}
                             }

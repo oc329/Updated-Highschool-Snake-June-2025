@@ -1,5 +1,6 @@
 from pygame import image, transform, Surface
 from os import listdir, path
+from pathlib import Path
 
 from resource_modules.colors import WHITE
 from resource_modules.screen_info import CELL_SIZE
@@ -82,8 +83,14 @@ def get_skin_name_to_head_body_images_lookup(path_components = ('Assets', 'Sprit
     for folder_skin_name in listdir(base_path):
         folder_path = path.join(base_path, folder_skin_name)
 
+        ## Ignoring hidden files like .DS_Store on Mac
+        print(folder_skin_name)
+        if folder_skin_name.startswith('.'):
+            continue
+
         if not path.isdir(folder_path):
-            raise ValueError("Should be only Folders in Directory of Snake Images")
+            print(folder_path, folder_skin_name)
+            raise ValueError("Should be only Folders in Directory of Snake Images", folder_path)
         
         head_path = path.join(folder_path, "head.png")
         body_path = path.join(folder_path, "body.png")

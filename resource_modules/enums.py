@@ -41,40 +41,14 @@ class TextSurfacePosAnchor(Enum):
     MIDDLE = 'middle'
     END = 'end'
 
-# class BoxPosAnchor(TextSurfacePosAnchor):
-#     """
-#     Inherits from TextSurfacePosAnchor. Has functioanlity to calcualte box pos based on given point
-#     """
-#     def calculate_box_pos(self, point: tuple[int, int], text_width: int) -> tuple[int, int]:
-#         """
-#         Calculates the top-left position of the box based on the anchor pointand the given point.
 
-#         Parameters:
-#             - point: The reference point (x, y)
-#             - text_width (int): The width of the menu box's text 
-#             - box_height: The height of the box
-
-#         Returns:
-#             - A tuple representing the top-left position (x, y) of the box.
-#         """
-#         match self:
-#             case BoxPosAnchor.START:
-#                 return (point[0], point[1])
-#             case BoxPosAnchor.MIDDLE:
-#                 return (point[0] - box_width // 2, point[1])
-#             case BoxPosAnchor.END:
-#                 return (point[0] + box_width, point[1])
-#             case _:
-#                 raise ValueError(f"Invalid BoxPosAnchor: {self}")
-
-    
 class AbstractSectorPosAnchor(Enum):
     """
     Describes where to position the Menu boxes
     within the sector 
     """
     def calculate_axis_value(self, top_left: tuple[int, int], bottom_right: tuple[int, int]) -> int:
-        raise NotImplementedError
+        raise NotImplementedError("Must be implemented by subclasses")
         
 
 class HorizontalSectorPosAnchor(AbstractSectorPosAnchor): 
@@ -90,8 +64,7 @@ class HorizontalSectorPosAnchor(AbstractSectorPosAnchor):
             case HorizontalSectorPosAnchor.MIDDLE:
                 return (top_y + bottom_y) // 2
             case HorizontalSectorPosAnchor.BOTTOM:
-                return bottom_y 
-            
+                return bottom_y     
 
 class VerticalSectorPosAnchor(AbstractSectorPosAnchor): 
     LEFT = auto()
@@ -108,8 +81,4 @@ class VerticalSectorPosAnchor(AbstractSectorPosAnchor):
             case VerticalSectorPosAnchor.RIGHT:
                 return right_x
 
-
-class OnePointLayout(Enum): 
-    HORIZONTAL = auto()
-    VERTICAL = auto()
 
