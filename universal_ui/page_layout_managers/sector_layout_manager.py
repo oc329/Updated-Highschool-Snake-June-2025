@@ -51,15 +51,14 @@ class VerticalSectorLayoutManager(AbstractSectorLayoutManager):
         """
         Ensures the combined box height is less than the sector height
         """
-        if self.layout == Layout.VERTICAL:
-            self.ensure_boxes_can_fit_btw_two_points(boxes, Layout.VERTICAL, self.top_left_pos, self.bottom_right_pos)
-            combined_box_height = self.get_combined_box_height(boxes)
-            ## graphics are in 4th sector so y is greater lower down
-            sector_height = self.bottom_right_pos[1] - self.top_left_pos[1]
+        self.ensure_boxes_can_fit_btw_two_points(boxes, Layout.VERTICAL, self.top_left_pos, self.bottom_right_pos)
+        combined_box_height = self.get_combined_box_height(boxes)
+        ## graphics are in 4th sector so y is greater lower down
+        sector_height = self.bottom_right_pos[1] - self.top_left_pos[1]
 
-            if combined_box_height > sector_height:
-                raise ValueError(f"Boxes do not fit vertically in sector. "
-                                f"Sector height: {sector_height}, required: {combined_box_height}")
+        if combined_box_height > sector_height:
+            raise ValueError(f"Boxes do not fit vertically in sector. "
+                            f"Sector height: {sector_height}, required: {combined_box_height}")
     def get_points_based_on_sector_pos_anchor(self):
         x = self.sector_pos_anchor.calculate_axis_value(self.top_left_pos, self.bottom_right_pos)
         return (x, self.top_left_pos[1]), (x, self.bottom_right_pos[1])
